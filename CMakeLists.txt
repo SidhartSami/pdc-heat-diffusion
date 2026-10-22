@@ -40,6 +40,8 @@ include_directories(include)
 add_library(heat_core
     src/config.cpp
     src/timer.cpp
+    src/boundary.cpp
+    src/solver.cpp
 )
 
 target_include_directories(heat_core PUBLIC

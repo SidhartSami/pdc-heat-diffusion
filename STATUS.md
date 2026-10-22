@@ -1,59 +1,57 @@
-# Gate 0 (G0) Status Report: Repository Scaffold & Build Infrastructure
+# Gate 1 (G1) Status Report: Serial 2D & 3D FTCS Solver
 
 ## 1. Gate Status: COMPLETE (Awaiting User Review / Approval)
 
 ## 2. What Was Done
-- **Repository Scaffold & Layout**:
-  - `CMakeLists.txt` configured with C++17, OpenMP, MPI, and GoogleTest via `FetchContent`.
-  - `CMakePresets.json` configured with three standard presets: `debug`, `release`, and `asan-ubsan`.
-  - Formatter & Linter rules: `.clang-format` (LLVM-based 4-space indent) and `.clang-tidy`.
-  - Pre-commit hook definitions: `.pre-commit-config.yaml`.
-  - Git configuration: `.gitignore` and `.gitkeep` files in `bench/`, `analysis/`, `results/`, and `output/`.
-  - Documentation stubs: `docs/report/report.md` and `docs/references.md`.
-  - Open Source License: `LICENSE` (MIT).
-  - Contributor guide: `CONTRIBUTING.md` detailing branch strategy, PRs, and conventional commit guidelines.
-  - Project Proposal: `docs/proposal.md` with problem formulation and target grids ($4096^2$ and $512^3$).
-  - Design Document: `docs/design.md` covering memory layouts, Cartesian decomposition, and overlap strategy.
-  - Viva Voce Preparation Guide: `docs/viva-prep.md` addressing fundamental oral exam questions.
-  - CI Pipeline: `.github/workflows/ci.yml` matrix building `debug`, `release`, `asan-ubsan`, testing via CTest and MPI smoke tests, plus `clang-format` checking.
-  - Six standard configuration files:
-    - `configs/small_2d.cfg` ($64 \times 64$)
-    - `configs/medium_2d.cfg` ($512 \times 512$)
-    - `configs/large_2d.cfg` ($4096 \times 4096$)
-    - `configs/small_3d.cfg` ($64 \times 64 \times 64$)
-    - `configs/medium_3d.cfg` ($128 \times 128 \times 128$)
-    - `configs/large_3d.cfg` ($512 \times 512 \times 512$)
-    - `configs/unstable_2d.cfg` (intentionally unstable for testing rejection)
-  - Core configuration & timing primitives:
-    - `include/heat/config.hpp` & `src/config.cpp` (custom key=value parser, FTCS stability calculator).
-    - `include/heat/timer.hpp` & `src/timer.cpp` (MPI_Wtime wrapper using the standard MPI C API with min/max/avg reduction).
-    - `src/main.cpp` (MPI funneled initialization check, config parsing, stability validation guard).
-    - `tests/test_config.cpp` (GoogleTest suite testing stability limits and file parsing).
+- **Core Stencil Grid & Data Structures**:
+  - `include/heat/grid.hpp`: Implemented `Grid2D` and `Grid3D` continuous single-allocation flat vectors (`std::vector<double>`) with explicit 1-cell halo boundaries on all sides. Fast row-major coordinate index mapping and zero-copy `swap` support for double buffering.
+- **Physical Boundaries & Initial Conditions**:
+  - `include/heat/boundary.hpp` and `src/boundary.cpp`:
+    - Initial conditions: Decaying Sine modes, Gaussian hot-spot, and step function.
+    - Boundary conditions: Dirichlet (exact physical values matching analytic modes at boundaries) and Neumann (zero-flux ghost cell assignment $u_0 = u_1$).
+    - Energy calculation: Discrete domain integration for 2D and 3D grids.
+- **Explicit FTCS Serial Solver Engine**:
+  - `include/heat/solver.hpp` and `src/solver.cpp`:
+    - 5-point central-difference stencil in 2D.
+    - 7-point central-difference stencil in 3D.
+    - Double-buffering pointer swapping (`u_old.swap(u_new)`).
+    - Hard stability validation guard in solver constructor (`throw std::runtime_error` if $\Delta t > \Delta t_{\max}$).
+- **Comprehensive Verification Suite**:
+  - `tests/test_serial_solver.cpp`:
+    - 1D, 2D, and 3D analytic sine decay verification.
+    - Empirical spatial convergence order ($O(\Delta x^2)$) on refined grids ($N=32, 64, 128$).
+    - Neumann energy conservation test (verifying $\int_\Omega u\,d\Omega = \text{const}$ within machine precision).
+    - Solver constructor stability rejection test.
 
 ## 3. What Was Verified & How
-- **MPI & OpenMP Interface Standard**:
-  - Code uses the standard MPI C API (`#include <mpi.h>`) throughout. Deprecated/removed MPI C++ bindings are not used.
-  - OpenMP version reported by `_OPENMP` macro is `201511` (OpenMP 4.5).
-- **CMake Presets Build & CTest Verification**:
-  - `debug` preset: Built with `-Wall -Wextra -Wpedantic -Werror`, 100% tests passed (`3/3 passed`).
-  - `release` preset: Built with `-O3 -DNDEBUG`, 100% tests passed (`3/3 passed`).
-  - `asan-ubsan` preset: Built with `-fsanitize=address,undefined`, 100% tests passed (`3/3 passed`).
-- **Formatting, Linters, and Pre-commit**:
-  - `clang-format --dry-run --Werror`: 0 violations across all `.hpp` and `.cpp` files.
-  - `clang-tidy`: Checked with `.clang-tidy` suppressing external OpenMPI macro void-cast warnings.
-  - `pre-commit run --all-files`: 100% passed (trailing-whitespace, end-of-file-fixer, check-yaml, check-added-large-files, clang-format).
-- **Stability Formula & Numerical Verification**:
-  - Physical domain convention: $x \in [0, L]$ with $L = 1.0$. Cell spacing is $\Delta x = L / N = 1 / N$.
-  - Thermal diffusivity $\alpha$ is dynamic and read directly from config (`cfg.alpha`).
-  - Stability formula is dimension-aware: $\Delta t \le \frac{1}{2 \alpha \sum_{i=1}^d \frac{1}{\Delta x_i^2}}$.
-  - Tested hand-computed 3D stability threshold in `StabilityLimitCalculation3D`: for $100^3$ with $\alpha=1.0$, $\Delta t_{\max} = \frac{1}{60000} \approx 1.66667 \times 10^{-5}$, exactly matched by `cfg.maxStableDt()`.
-- **MPI Smoke & Stability Enforcement**:
-  - Intentionally unstable config (`configs/unstable_2d.cfg`) exits immediately with non-zero exit code (exit code 2) and logs an explicit stability rejection error.
-  - Benchmarks will strictly forbid `--oversubscribe` and monitor physical core counts.
+- **End-to-End Application Exit Codes**:
+  - `small_2d.cfg`: Ran cleanly to completion with exit code `0`.
+  - `unstable_2d.cfg`: Instantly halted with exit code `2` with the explicit CFL violation diagnostic.
+- **Analytic Solutions**:
+  - 1D Sine Decay: Matched exact solution $e^{-\pi^2 \alpha t} \sin(\pi x)$ within $10^{-12}$.
+  - 2D Sine Decay: Maximum pointwise error after 50 steps on $64 \times 64$ is $< 10^{-3}$.
+  - 3D Sine Decay: Maximum pointwise error after 30 steps on $32^3$ is $< 2 \times 10^{-3}$.
+- **Empirical Convergence Order ($O(\Delta x^2)$)**:
+  - Computed spatial error $L_2$ norm across grid refinements with fixed Courant/diffusion number $r = 0.15$:
+    | Resolution ($N$) | Time Step ($\Delta t$) | $L_2$ Error Norm | Error Reduction Ratio | Empirical Order ($p$) |
+    | :--- | :--- | :--- | :--- | :--- |
+    | **$32 \times 32$** | $1.4648 \times 10^{-4}$ | $6.37960 \times 10^{-6}$ | — | — |
+    | **$64 \times 64$** | $3.6621 \times 10^{-5}$ | $1.53776 \times 10^{-6}$ | **4.1486** | **2.05** |
+    | **$128 \times 128$** | $9.1553 \times 10^{-6}$ | $3.87848 \times 10^{-7}$ | **3.9649** | **1.99** |
+  - *Observation*: The reduction ratio closely clusters around $4.0\times$ (theoretical $2^2 = 4$), confirming clean second-order spatial convergence.
+- **Neumann Energy Conservation**:
+  - Total energy initially: $\approx 0.0314159$.
+  - Total energy after 100 FTCS diffusion steps: exactly identical within numerical precision (difference $< 10^{-12}$).
+- **Sanitizers & Tooling Cleanliness**:
+  - Debug preset: 9/9 tests passed.
+  - Release preset: 9/9 tests passed.
+  - ASan + UBSan preset: 9/9 tests passed cleanly without any memory leaks or undefined behavior.
+  - `pre-commit run --all-files`: Passed all hooks (clang-format, whitespace, yaml, eof).
+  - `clang-tidy`: Checked across all `src/*.cpp` and `include/heat/*.hpp`.
 
-## 4. Architecture Decision Records (ADRs)
-- `docs/adr/0001-use-cpp17-standard.md`: Justified selection of C++17 standard and pure MPI C API.
-- `docs/adr/0002-config-parser-choice.md`: Justified dependency-free key=value config parser.
+## 4. Architecture Decisions & Notes
+- Double buffering is encapsulated cleanly using `std::vector::swap` which performs $O(1)$ pointer exchanges without buffer reallocations.
+- Large 3D grid memory footprint: `configs/large_3d.cfg` ($512^3$) requires $\approx 2.15$ GB RAM for double buffers; documented in config header.
 
-## 5. What Is Open / Next Gate (G1)
-- **Gate 1**: Implementation of the serial 2D and 3D FTCS solver with double buffering (`u_old`, `u_new`), analytical verification against decaying sine modes, empirical convergence rate tests ($O(\Delta x^2)$ in space, $O(\Delta t)$ in time), and Dirichlet/Neumann boundaries.
+## 5. What Is Open / Next Gate (G2)
+- **Gate 2**: MPI 2D and 3D Cartesian domain decomposition (`MPI_Cart_create`, `MPI_Cart_shift`), non-blocking halo exchange (`MPI_Isend`, `MPI_Irecv`), boundary/interior decomposition, and serial-parallel equivalence across 1 to 8 ranks including uneven grids.
