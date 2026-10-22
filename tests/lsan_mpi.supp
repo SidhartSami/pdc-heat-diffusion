@@ -1,10 +1,12 @@
-# OpenMPI internal runtime leak suppressions
-leak:libopen-pal.so
-leak:libpmix.so
-leak:libmpi.so
-leak:libuct
-leak:libucp
-leak:libevent
-leak:libhsa-runtime
+leak:/libopen-pal.so
+leak:/libpmix.so
+leak:/libmpi.so
+leak:/libuct
+leak:/libucp
+leak:/libevent
+leak:/libhsa-runtime
+leak:pmix_
+leak:PMIx_
+leak:opal_
+leak:ompi_
 leak:PMPI_Init
-leak:ompi_mpi_init

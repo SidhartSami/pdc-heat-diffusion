@@ -7,5 +7,6 @@ for np in 1 2 3 4 6 8; do
     echo ">>> RUNNING MPI TESTS WITH NP = ${np}"
     echo "=========================================================="
     mpirun -np ${np} ./build/debug/tests/test_mpi
+    echo "EXIT_CODE_NP_${np}: $?"
 done
 echo "ALL RANK COUNTS PASSED SUCCESSFULLY!"

@@ -28,3 +28,11 @@ To maximize spatial cache locality and enable effective compiler vectorization:
 ## 4. OpenMP Threading & NUMA Strategy
 - Work is partitioned across threads using `#pragma omp parallel for collapse(2)` or `#pragma omp parallel for schedule(static)`.
 - Allocations are initialized in parallel with the same scheduling policy (First-Touch) to ensure memory pages map to the local NUMA domain of the executing thread.
+
+## 5. Numerical Equivalence & Bit-Identical Precision
+Because the FTCS stencil is an explicit finite-difference formula, updating cell $(i, j, k)$ in time step $n+1$ depends solely on the values at step $n$ of the cell and its immediate orthogonal neighbors:
+$$u^{n+1}_{i,j,k} = u^n_{i,j,k} + \Delta t \left( \frac{\alpha}{\Delta x^2} (u^n_{i+1} - 2u^n_i + u^n_{i-1}) + \dots \right)$$
+In both the serial solver and the distributed MPI solver:
+1. Double-buffering prevents in-place overwrite hazards.
+2. Arithmetic operations are executed in identical sequence with identical IEEE 754 double-precision floating point rounding.
+3. As long as boundary halo cells received via MPI match the serial grid neighbor cells to the last bit, the computed interior and boundary update evaluates to exact bit-identical values (`Max Diff: 0.0`). This is tested across all rank counts $P \in \{1, 2, 3, 4, 6, 8\}$ and confirmed in unit testing.
