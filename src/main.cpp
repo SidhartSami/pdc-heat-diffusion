@@ -84,7 +84,8 @@ int main(int argc, char** argv) {
                   << " CPU Model: " << getCpuModel() << "\n"
                   << " Physical Topology: 12 cores (4 P-cores + 8 E-cores), 16 logical CPUs\n"
                   << " MPI Ranks: " << size << ", OpenMP Threads/Rank: " << omp_threads << "\n"
-                  << " OpenMP Standard: OpenMP " << _OPENMP << " (OpenMP 4.0 places/binding)\n"
+                  << " OpenMP Version: OpenMP " << _OPENMP << " (Standard 4.5)\n"
+                  << " Feature Citation: OMP_PLACES and OMP_PROC_BIND specified in OpenMP 4.0 (Section 4.4)\n"
                   << " Pinning: OMP_PLACES=" << omp_places_str
                   << ", OMP_PROC_BIND=" << omp_bind_str
                   << ", GOMP_CPU_AFFINITY=" << gomp_affinity_str << "\n"
@@ -125,21 +126,31 @@ int main(int argc, char** argv) {
     double avg_elapsed = 0.0;
     heat::Timer::reduceSummary(local_elapsed, MPI_COMM_WORLD, min_elapsed, max_elapsed, avg_elapsed);
 
-    if (rank == 0) {
-        const double cells = (config.dimension == 2)
-                                 ? static_cast<double>(config.nx) * static_cast<double>(config.ny)
-                                 : static_cast<double>(config.nx) * static_cast<double>(config.ny) *
-                                       static_cast<double>(config.nz);
-        const double total_updates = cells * config.steps;
-        const double mflops_or_mups = (total_updates / max_elapsed) / 1e6;
+    const double cells = (config.dimension == 2)
+                             ? static_cast<double>(config.nx) * static_cast<double>(config.ny)
+                             : static_cast<double>(config.nx) * static_cast<double>(config.ny) *
+                                   static_cast<double>(config.nz);
+    const double total_updates = cells * config.steps;
+    const double mflops_or_mups = (total_updates / max_elapsed) / 1e6;
 
+    if (rank == 0) {
         std::cout << "[EXECUTION SUMMARY]\n"
                   << " Max Time (Wall):  " << std::fixed << std::setprecision(6) << max_elapsed << " s\n"
                   << " Min Time (Wall):  " << min_elapsed << " s\n"
                   << " Avg Time (Wall):  " << avg_elapsed << " s\n"
                   << " Throughput:       " << std::setprecision(3) << mflops_or_mups << " MegaUpdates/s\n"
                   << "========================================================\n";
+    }
 
+    // Print per-rank local timings and verify uniform grid across ranks
+    {
+        std::cout << "[RANK " << rank << "/" << size << "] Subdomain: " << config.nx << "x"
+                  << config.ny << (config.dimension == 3 ? ("x" + std::to_string(config.nz)) : "")
+                  << ", Steps: " << config.steps << ", Local Wall Time: " << std::fixed
+                  << std::setprecision(6) << local_elapsed << " s\n";
+    }
+
+    if (rank == 0) {
         // If --benchmark-csv was requested via environment or flag, write CSV
         const char* csv_output = std::getenv("BENCHMARK_CSV_FILE");
         if (csv_output != nullptr) {

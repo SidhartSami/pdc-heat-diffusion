@@ -6,6 +6,7 @@
 #include <heat/solver.hpp>
 
 #include <gtest/gtest.h>
+#include <omp.h>
 
 #include <cmath>
 #include <iostream>
@@ -199,6 +200,17 @@ TEST(MpiSolverTest, ParallelEqualsSerial2DUneven) {
     int size = 1;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    int active_threads = 0;
+    #pragma omp parallel default(none) shared(active_threads)
+    {
+        #pragma omp single
+        active_threads = omp_get_num_threads();
+    }
+    if (rank == 0) {
+        std::cout << "[HYBRID THREAD VERIFICATION] Max Threads: " << omp_get_max_threads()
+                  << ", Active Parallel Region Threads: " << active_threads << "\n";
+    }
 
     heat::Config cfg;
     cfg.dimension = 2;
