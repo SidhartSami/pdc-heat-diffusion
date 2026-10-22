@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 set -e
-cd /mnt/c/University/PDC/Project
+
+# Resolve repository root relative to this script's directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "${REPO_ROOT}"
 
 export OMPI_MCA_patcher=^overwrite
-export LSAN_OPTIONS="suppressions=/mnt/c/University/PDC/Project/tests/lsan_mpi.supp"
+export LSAN_OPTIONS="suppressions=${REPO_ROOT}/tests/lsan_mpi.supp"
 export ASAN_OPTIONS="detect_leaks=1"
 
 for np in 1 2 3 4 6 8; do
