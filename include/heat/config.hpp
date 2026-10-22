@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
 
 namespace heat {
 
@@ -24,15 +23,15 @@ struct Config {
 
     /**
      * @brief Validates explicit FTCS stability condition:
-     * dt <= dx^2 / (2 * dim * alpha)
+     * dt <= 1 / (2 * alpha * sum(1/dx_i^2))
      * @return true if configuration is numerically stable, false otherwise.
      */
-    bool isStable() const;
+    [[nodiscard]] bool isStable() const;
 
     /**
      * @brief Calculates maximum allowable dt for numerical stability.
      */
-    double maxStableDt() const;
+    [[nodiscard]] double maxStableDt() const;
 };
 
 /**

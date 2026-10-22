@@ -7,6 +7,18 @@
   },
   "configurePresets": [
     {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Optimized release build",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "HEAT_BUILD_TESTS": "ON",
+        "HEAT_ENABLE_SANITIZERS": "OFF"
+      }
+    },
+    {
       "name": "default",
       "displayName": "Default (Release)",
       "description": "Optimized release build",

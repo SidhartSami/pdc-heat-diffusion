@@ -1,9 +1,9 @@
 # Project Proposal: Parallel Heat Diffusion Simulation on Large 2D/3D Grids (MPI + OpenMP)
 
-**Course**: Parallel & Distributed Computing (PDC)  
-**Reference**: Project #12 (Heat Diffusion / Stencil Computation)  
-**Model**: Hybrid Distributed-Shared Memory (MPI + OpenMP)  
-**Group Members**: [Group Member Placeholders]  
+**Course**: Parallel & Distributed Computing (PDC)
+**Reference**: Project #12 (Heat Diffusion / Stencil Computation)
+**Model**: Hybrid Distributed-Shared Memory (MPI + OpenMP)
+**Group Members**: [Group Member Placeholders]
 
 ---
 

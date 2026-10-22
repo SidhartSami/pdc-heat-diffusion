@@ -10,8 +10,9 @@ namespace heat {
 
 static inline std::string trim(const std::string& str) {
     const auto first = str.find_first_not_of(" \t\r\n");
-    if (first == std::string::npos)
+    if (first == std::string::npos) {
         return "";
+    }
     const auto last = str.find_last_not_of(" \t\r\n");
     return str.substr(first, (last - first + 1));
 }
@@ -50,8 +51,9 @@ Config ConfigParser::loadFromFile(const std::string& filepath) {
             line = line.substr(0, comment_pos);
         }
         line = trim(line);
-        if (line.empty())
+        if (line.empty()) {
             continue;
+        }
 
         const auto eq_pos = line.find('=');
         if (eq_pos == std::string::npos) {
@@ -90,7 +92,7 @@ Config ConfigParser::loadFromFile(const std::string& filepath) {
             cfg.output_path = val;
         } else {
             std::cerr << "Warning: Unknown config key '" << key << "' at line " << line_number
-                      << std::endl;
+                      << "\n";
         }
     }
 

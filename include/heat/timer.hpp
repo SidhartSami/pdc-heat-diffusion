@@ -2,9 +2,6 @@
 
 #include <mpi.h>
 
-#include <string>
-#include <unordered_map>
-
 namespace heat {
 
 /**
@@ -16,7 +13,7 @@ class Timer {
 
     void start();
     void stop();
-    double elapsedSeconds() const;
+    [[nodiscard]] double elapsedSeconds() const;
 
     /**
      * @brief Computes maximum, minimum, and average duration across all MPI ranks.
