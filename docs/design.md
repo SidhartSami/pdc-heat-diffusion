@@ -34,5 +34,12 @@ Because the FTCS stencil is an explicit finite-difference formula, updating cell
 $$u^{n+1}_{i,j,k} = u^n_{i,j,k} + \Delta t \left( \frac{\alpha}{\Delta x^2} (u^n_{i+1} - 2u^n_i + u^n_{i-1}) + \dots \right)$$
 In both the serial solver and the distributed MPI solver:
 1. Double-buffering prevents in-place overwrite hazards.
-2. Arithmetic operations are executed in identical sequence with identical IEEE 754 double-precision floating point rounding.
+2. Arithmetic operations are executed in identical sequence with identical IEEE 754 double-precision floating point rounding per cell. In both synchronous and overlapped modes, the domain update is decomposed into disjoint cell sets (interior vs. boundary shell in overlap mode) without altering the algebraic operations or operand evaluation order for any individual cell.
 3. As long as boundary halo cells received via MPI match the serial grid neighbor cells to the last bit, the computed interior and boundary update evaluates to exact bit-identical values (`Max Diff: 0.0`). This is tested across all rank counts $P \in \{1, 2, 3, 4, 6, 8\}$ and confirmed in unit testing.
+
+### Floating-Point Associativity and G3 Tolerance Planning
+While the local stencil evaluation per cell is bit-identical, global reductions (such as calculating the domain's total energy $\sum u_{i,j,k} \Delta V$ or global max norm) will exhibit non-associative floating-point summation drift when parallelized under OpenMP (`#pragma omp parallel for reduction(+:...))`. OpenMP distributes loop chunks dynamically or across variable numbers of threads, changing the accumulation order of summation trees.
+
+Therefore, for G3 hybrid execution:
+- **Per-cell grid equivalence** (`MPI + OpenMP` stencil update vs. serial reference) will remain strictly bit-identical (`Max Diff: 0.0` or $\le 10^{-14}$) because each cell's arithmetic stencil uses an invariant operand order.
+- **Global energy / norm reductions** parallelized across threads will adopt an explicit tolerance of $\varepsilon = 10^{-12}$ to account for standard OpenMP tree summation reordering.
