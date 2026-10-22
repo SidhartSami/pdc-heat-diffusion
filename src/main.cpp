@@ -31,6 +31,21 @@ std::string getCpuModel() {
     return "Unknown CPU";
 }
 
+int getOnlineLogicalCpus() {
+    std::ifstream online("/sys/devices/system/cpu/online");
+    std::string line;
+    if (std::getline(online, line)) {
+        auto dash = line.find('-');
+        if (dash != std::string::npos) {
+            try {
+                int max_id = std::stoi(line.substr(dash + 1));
+                return max_id + 1;
+            } catch (...) {}
+        }
+    }
+    return omp_get_num_procs();
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -81,8 +96,8 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         std::cout << "========================================================\n"
                   << " Parallel Heat Diffusion Solver (MPI + OpenMP Hybrid)\n"
-                  << " CPU Model: " << getCpuModel() << "\n"
-                  << " Physical Topology: 12 cores (4 P-cores + 8 E-cores), 16 logical CPUs\n"
+                  << " Hardware Model: " << getCpuModel() << "\n"
+                  << " Online Logical CPUs: " << getOnlineLogicalCpus() << " (reported by sysfs /sys/devices/system/cpu/online)\n"
                   << " MPI Ranks: " << size << ", OpenMP Threads/Rank: " << omp_threads << "\n"
                   << " OpenMP Runtime: Version " << _OPENMP << " (Standard 4.5), Dynamic Adjustment: "
                   << (omp_get_dynamic() ? "ENABLED" : "DISABLED") << "\n"
@@ -94,8 +109,7 @@ int main(int argc, char** argv) {
         if (gomp_affinity != nullptr) {
             std::cout << " GNU Alternative Pinning: GOMP_CPU_AFFINITY=" << gomp_affinity_str << "\n";
         }
-        std::cout << " Compiler: GNU " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__
-                  << ", Flags: -O3 -DNDEBUG -std=c++17 -Wall -Wextra -Wpedantic -ffp-contract=off\n"
+        std::cout << " Compiler: " << __VERSION__ << "\n"
                   << " Dimension: " << config.dimension << "D, Grid: " << config.nx << "x"
                   << config.ny;
         if (config.dimension == 3) {
