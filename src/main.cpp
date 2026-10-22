@@ -84,12 +84,16 @@ int main(int argc, char** argv) {
                   << " CPU Model: " << getCpuModel() << "\n"
                   << " Physical Topology: 12 cores (4 P-cores + 8 E-cores), 16 logical CPUs\n"
                   << " MPI Ranks: " << size << ", OpenMP Threads/Rank: " << omp_threads << "\n"
-                  << " OpenMP Version: OpenMP " << _OPENMP << " (Standard 4.5)\n"
-                  << " Feature Citation: OMP_PLACES and OMP_PROC_BIND specified in OpenMP 4.0 (Section 4.4)\n"
-                  << " Pinning: OMP_PLACES=" << omp_places_str
-                  << ", OMP_PROC_BIND=" << omp_bind_str
-                  << ", GOMP_CPU_AFFINITY=" << gomp_affinity_str << "\n"
-                  << " Compiler: GNU " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__
+                  << " OpenMP Runtime Version: OpenMP " << _OPENMP << " (Standard 4.5)\n"
+                  << " Note: OMP_PLACES and OMP_PROC_BIND affinity controls were introduced in OpenMP 4.0 (Section 4.4)\n";
+        if (omp_places_env != nullptr || omp_bind_env != nullptr) {
+            std::cout << " Standard Pinning (OpenMP 4.0): OMP_PLACES=" << omp_places_str
+                      << ", OMP_PROC_BIND=" << omp_bind_str << "\n";
+        }
+        if (gomp_affinity != nullptr) {
+            std::cout << " GNU Alternative Pinning: GOMP_CPU_AFFINITY=" << gomp_affinity_str << "\n";
+        }
+        std::cout << " Compiler: GNU " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__
                   << ", Flags: -O3 -DNDEBUG -std=c++17 -Wall -Wextra -Wpedantic -ffp-contract=off\n"
                   << " Dimension: " << config.dimension << "D, Grid: " << config.nx << "x"
                   << config.ny;

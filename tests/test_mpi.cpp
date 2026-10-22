@@ -201,17 +201,6 @@ TEST(MpiSolverTest, ParallelEqualsSerial2DUneven) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    int active_threads = 0;
-    #pragma omp parallel default(none) shared(active_threads)
-    {
-        #pragma omp single
-        active_threads = omp_get_num_threads();
-    }
-    if (rank == 0) {
-        std::cout << "[HYBRID THREAD VERIFICATION] Max Threads: " << omp_get_max_threads()
-                  << ", Active Parallel Region Threads: " << active_threads << "\n";
-    }
-
     heat::Config cfg;
     cfg.dimension = 2;
     cfg.nx = 67; // Prime / uneven dimensions
@@ -230,6 +219,11 @@ TEST(MpiSolverTest, ParallelEqualsSerial2DUneven) {
     heat::Grid2D parallel_gathered = mpi_solver.gather2D(local_grid, decomp);
 
     if (rank == 0) {
+        std::cout << "[HYBRID THREAD VERIFICATION] Max Configured Threads: " << omp_get_max_threads()
+                  << ", Active Stencil Loop Threads: " << mpi_solver.activeThreadsLastRun() << "\n";
+        EXPECT_GT(mpi_solver.activeThreadsLastRun(), 0);
+        EXPECT_EQ(mpi_solver.activeThreadsLastRun(), omp_get_max_threads());
+
         // 2. Run serial reference solver
         heat::SerialSolver serial_solver(cfg);
         heat::Grid2D serial_grid = serial_solver.run2D();

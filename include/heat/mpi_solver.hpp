@@ -39,9 +39,12 @@ class MpiSolver {
 
     [[nodiscard]] const Config& config() const noexcept { return m_config; }
 
+    [[nodiscard]] int activeThreadsLastRun() const noexcept { return m_last_active_threads; }
+
   private:
     Config m_config;
     MPI_Comm m_comm;
+    mutable int m_last_active_threads = 0;
 
     void step2DOverlap(Grid2D& u_old, Grid2D& u_new, HaloExchange2D& halo,
                        const Decomposition2D& decomp, BoundaryType bc, double t) const;

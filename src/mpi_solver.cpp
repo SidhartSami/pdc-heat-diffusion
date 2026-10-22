@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <omp.h>
 #include <stdexcept>
 #include <utility>
 
@@ -179,14 +180,20 @@ void MpiSolver::step2DNoOverlap(Grid2D& u_old, Grid2D& u_new, HaloExchange2D& ha
     const double rx = m_config.alpha * m_config.dt / (dx * dx);
     const double ry = m_config.alpha * m_config.dt / (dy * dy);
 
-    #pragma omp parallel for collapse(2) default(none) \
-        shared(u_old, u_new, nx, ny, rx, ry) schedule(static)
-    for (int j = 1; j <= ny; ++j) {
-        for (int i = 1; i <= nx; ++i) {
-            const double center = u_old(i, j);
-            const double laplacian = rx * (u_old(i + 1, j) - 2.0 * center + u_old(i - 1, j)) +
-                                     ry * (u_old(i, j + 1) - 2.0 * center + u_old(i, j - 1));
-            u_new(i, j) = center + laplacian;
+    #pragma omp parallel default(none) \
+        shared(u_old, u_new, nx, ny, rx, ry, m_last_active_threads)
+    {
+        #pragma omp single
+        m_last_active_threads = omp_get_num_threads();
+
+        #pragma omp for collapse(2) schedule(static)
+        for (int j = 1; j <= ny; ++j) {
+            for (int i = 1; i <= nx; ++i) {
+                const double center = u_old(i, j);
+                const double laplacian = rx * (u_old(i + 1, j) - 2.0 * center + u_old(i - 1, j)) +
+                                         ry * (u_old(i, j + 1) - 2.0 * center + u_old(i, j - 1));
+                u_new(i, j) = center + laplacian;
+            }
         }
     }
 }
