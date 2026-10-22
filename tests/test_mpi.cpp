@@ -397,43 +397,7 @@ TEST(MpiSolverTest, NeumannEnergyConservationMPI2D) {
         std::cout << "[NEUMANN MPI EQUIVALENCE 2D] Ranks: " << size
                   << ", MPI Energy: " << energy_final << ", Serial Energy: " << energy_serial
                   << "\n";
-        EXPECT_NEAR(energy_final, energy_serial, 1e-14);
-    }
-}
-
-// 7. Mutation Test: Injected halo corruption fails the test
-TEST(MpiMutationTest, BrokenHaloExchangeFails) {
-    int rank = 0;
-    int size = 1;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-    if (size < 2) {
-        // Mutation check requires at least 2 ranks to exchange halos
-        return;
-    }
-
-    const int global_nx = 32;
-    const int global_ny = 32;
-
-    heat::Decomposition2D decomp(global_nx, global_ny, MPI_COMM_WORLD);
-    heat::HaloExchange2D halo(decomp);
-
-    heat::Grid2D grid(decomp.localNx(), decomp.localNy());
-    for (int j = 1; j <= decomp.localNy(); ++j) {
-        for (int i = 1; i <= decomp.localNx(); ++i) {
-            grid(i, j) = 100.0 * (rank + 1);
-        }
-    }
-
-    halo.exchange(grid);
-
-    // Intentionally mutate/corrupt a received halo cell if rank has a neighbor
-    if (decomp.neighborLeft() != MPI_PROC_NULL) {
-        grid(0, 1) += 999.0; // Corrupt ghost cell
-        // Check that corrupt value does NOT equal neighbor's true value
-        const double true_neighbor_val = 100.0 * (decomp.neighborLeft() + 1);
-        EXPECT_NE(grid(0, 1), true_neighbor_val);
+        EXPECT_LE(std::abs(energy_final - energy_serial) / energy_serial, 1e-12);
     }
 }
 

@@ -30,7 +30,6 @@ TEST(SerialSolverTest, AnalyticSineDecay1D) {
     }
 
     const double r = alpha * dt / (dx * dx);
-    double t = 0.0;
     for (int step = 0; step < steps; ++step) {
         // Dirichlet boundary: u(0) = u(1) = 0
         u_old(0) = -u_old(1);
@@ -39,7 +38,6 @@ TEST(SerialSolverTest, AnalyticSineDecay1D) {
         for (int i = 1; i <= nx; ++i) {
             u_new(i) = u_old(i) + r * (u_old(i + 1) - 2.0 * u_old(i) + u_old(i - 1));
         }
-        t += dt;
         u_old.swap(u_new);
     }
 
