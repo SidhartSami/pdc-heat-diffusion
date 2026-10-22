@@ -25,9 +25,10 @@ using an explicit Forward-Time Central-Space (FTCS) finite-difference scheme.
 
 ### Prerequisites
 - C++17 compliant compiler (`g++ >= 11` or `clang++ >= 14`)
+- Standard library headers matching compiler (e.g. `libstdc++-16-dev` on Ubuntu 26.04)
 - CMake >= 3.20
-- MPI (OpenMPI or MPICH)
-- OpenMP runtime
+- MPI (OpenMPI or MPICH, e.g. `libopenmpi-dev` & `openmpi-bin`)
+- OpenMP runtime (`libomp-dev`)
 - Python 3 with `numpy`, `matplotlib`, `pandas` (for analysis & visualization)
 
 ### Build with CMake Presets

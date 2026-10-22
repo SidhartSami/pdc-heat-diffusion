@@ -42,6 +42,9 @@ add_library(heat_core
     src/timer.cpp
     src/boundary.cpp
     src/solver.cpp
+    src/decomposition.cpp
+    src/halo.cpp
+    src/mpi_solver.cpp
 )
 
 target_include_directories(heat_core PUBLIC

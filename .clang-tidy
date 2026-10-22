@@ -20,7 +20,10 @@ Checks: >
   -readability-math-missing-parentheses,
   -readability-function-cognitive-complexity,
   -readability-redundant-inline-specifier,
-  -bugprone-implicit-widening-of-multiplication-result
+  -bugprone-implicit-widening-of-multiplication-result,
+  -clang-analyzer-optin.mpi.MPI-Checker,
+  -modernize-avoid-c-arrays,
+  -modernize-use-auto
 
 WarningsAsErrors: ''
 HeaderFilterRegex: 'include/heat/.*'

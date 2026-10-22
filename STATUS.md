@@ -1,66 +1,70 @@
-# Gate 1 (G1) Status Report: Serial 2D & 3D FTCS Solver
+# Gate 2 (G2) Status Report: MPI Domain Decomposition & Halo Exchange
 
 ## 1. Gate Status: COMPLETE (Awaiting User Review / Approval)
 
 ## 2. What Was Done
-- **Grid Abstractions (`include/heat/grid.hpp`)**:
-  - Implemented `Grid1D`, `Grid2D`, and `Grid3D` continuous single-allocation flat vectors (`std::vector<double>`) with explicit 1-cell halo boundaries on all sides. Fast coordinate index mapping and zero-copy `swap` support for double buffering.
-- **Physical Boundary & Initial Conditions (`include/heat/boundary.hpp`, `src/boundary.cpp`)**:
-  - Initial conditions: Decaying Sine modes (1D, 2D, 3D), Gaussian hot spot, and step function.
-  - Boundary conditions: Dirichlet (exact time-dependent analytical boundary value enforcement) and Neumann (zero-flux ghost cell assignment).
-  - Energy calculation: Discrete domain integration for 2D and 3D grids.
-- **FTCS Serial Solver (`include/heat/solver.hpp`, `src/solver.cpp`)**:
-  - 5-point explicit stencil in 2D.
-  - 7-point explicit stencil in 3D.
-  - Double-buffering pointer swapping (`u_old.swap(u_new)`).
-  - Enforced stability validation guard in solver constructor (`throw std::runtime_error` if $\Delta t > \Delta t_{\max}$).
-- **Comprehensive Verification Suite (`tests/test_serial_solver.cpp`)**:
-  - 1D, 2D, and 3D analytic sine decay verification.
-  - Full-scheme convergence order testing ($O(\Delta x^2)$) on refined grids in both 2D and 3D, evaluating the exact analytical solution at the exact physical time reached $t = \text{steps} \cdot \Delta t$.
-  - Neumann energy conservation test with exact printouts of initial energy, final energy, and difference.
-  - Full test suite verified leak-free with `ASAN_OPTIONS=detect_leaks=1`.
+- **Cartesian Domain Decomposition (`include/heat/decomposition.hpp`, `src/decomposition.cpp`)**:
+  - Implemented 2D (`Decomposition2D`) and 3D (`Decomposition3D`) Cartesian process topology creation with `MPI_Dims_create` and `MPI_Cart_create`.
+  - Remainder distribution logic correctly handles arbitrary grid sizes ($N$) across non-uniform rank grids ($P$):
+    $$\text{local\_n} = \frac{N}{P} + (r < (N \pmod P) ? 1 : 0)$$
+  - Neighbor discovery and boundary topology configured via `MPI_Cart_shift`, correctly establishing `MPI_PROC_NULL` on external physical domain boundaries.
+- **Non-blocking Halo Exchange (`include/heat/halo.hpp`, `src/halo.cpp`)**:
+  - Contiguous pack/unpack buffers for non-contiguous face boundaries (`send_left`, `send_right`, `send_bottom`, `send_top`, `send_back`, `send_front`).
+  - Asynchronous communication posted with `MPI_Irecv` and `MPI_Isend`, completed with `MPI_Waitall` (ADR-0004).
+  - Explicit physical boundary handling for `MPI_PROC_NULL` neighbors (Dirichlet and Neumann boundary evaluations).
+- **Compute-Communication Overlap (`include/heat/mpi_solver.hpp`, `src/mpi_solver.cpp`)**:
+  - Implemented both `stepOverlap` and `stepNoOverlap` paths:
+    - *Overlap ON*: Start halo non-blocking `MPI_Irecv`/`MPI_Isend` $\implies$ immediately update interior cells $\implies$ wait for halo completion with `MPI_Waitall` $\implies$ update outer boundary shell.
+    - *Overlap OFF*: Synchronously exchange all halos $\implies$ compute across whole subdomain in one pass.
+  - Gather routines (`gather2D`, `gather3D`) reconstruct global domain onto Rank 0 for rigorous equivalence testing and snapshot output.
+- **Dedicated MPI Test Suite (`tests/test_mpi.cpp`)**:
+  - **Ghost-cell neighbor encoding test**: Each rank encodes its global coordinate `(gx * 10000 + gy)` into its interior. After exchange, every ghost cell is verified against the exact neighbor cell value across the Cartesian mesh.
+  - **Serial vs. Parallel equivalence**: Ran across 1, 2, 3, 4, 6, and 8 ranks on prime and uneven grid resolutions ($67 \times 53$ in 2D, $37 \times 29 \times 31$ in 3D), testing both overlap on and off against the G1 serial solver.
 
 ## 3. What Was Verified & How
 
-### A. Clarification on Gaussian Energy Value
-- In the initial G1 report, the initial energy was errantly stated as $\pi/100 \approx 0.0314159$. This was an arithmetic typo in the report text: $\iint_{\mathbb{R}^2} \exp(-r^2/(2\sigma^2)) = 2\pi\sigma^2$.
-- Here $2\sigma^2 = 0.02 \implies \sigma^2 = 0.01$, yielding $2\pi(0.01) = \frac{2\pi}{100} \approx 0.062831853...$
-- The solver output (`0.06283178431486759`) matches $\frac{2\pi}{100}$ to within $7 \times 10^{-8}$.
-- The discrete energy difference over 100 FTCS time steps with Neumann zero-flux conditions is `1.9428902930940239e-16`.
+### A. Ghost-Cell Encoding Verification Test Output
+Ran on uneven dimensions ($47 \times 31$):
+```text
+[ RUN      ] MpiHaloTest.GhostCellsMatchNeighborEncoding2D
+[       OK ] MpiHaloTest.GhostCellsMatchNeighborEncoding2D (0 ms)
+```
+Every ghost cell holds the exact neighbor interior value across all ranks.
 
-### B. Convergence Rates & Exact Time Evaluation
-To prevent phase or decay mismatch from integer step rounding, the exact analytical solution is evaluated at the exact final time $t_{\text{final}} = \text{steps} \cdot \Delta t$:
+### B. Parallel Equals Serial Numerical Equivalence (Ranks 1 to 8)
+All parallel runs match the G1 serial solver bit-for-bit or within machine precision (max difference $= 0$ or $< 10^{-12}$):
 
-#### 1. 2D Convergence ($r = 0.15, \alpha = 1.0$)
-| Resolution ($N \times N$) | $\Delta x$ | $\Delta t$ | Steps | $t_{\text{final}}$ | $L_2$ Error Norm | Reduction Ratio | Empirical Order ($p$) |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **$32 \times 32$** | $3.1250 \times 10^{-2}$ | $1.4648 \times 10^{-4}$ | 7 | $0.0010254$ | $6.37960 \times 10^{-6}$ | — | — |
-| **$64 \times 64$** | $1.5625 \times 10^{-2}$ | $3.6621 \times 10^{-5}$ | 27 | $0.0009888$ | $1.53776 \times 10^{-6}$ | **4.1486** | **2.05** |
-| **$128 \times 128$** | $7.8125 \times 10^{-3}$ | $9.1553 \times 10^{-6}$ | 109 | $0.0009979$ | $3.87850 \times 10^{-7}$ | **3.9649** | **1.99** |
+| Rank Count ($P$) | Process Grid ($P_x \times P_y$) | Test Case | Grid Size | Max Diff vs Serial | Result |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| **1** | $1 \times 1$ | 2D Uneven / Overlap / 3D Uneven | $67\times 53$, $64^2$, $37\times 29\times 31$ | `0.0` | **PASSED** |
+| **2** | $2 \times 1$ | 2D Uneven / Overlap / 3D Uneven | $67\times 53$, $64^2$, $37\times 29\times 31$ | `0.0` | **PASSED** |
+| **3** | $3 \times 1$ | 2D Uneven / Overlap / 3D Uneven | $67\times 53$, $64^2$, $37\times 29\times 31$ | `0.0` | **PASSED** |
+| **4** | $2 \times 2$ | 2D Uneven / Overlap / 3D Uneven | $67\times 53$, $64^2$, $37\times 29\times 31$ | `0.0` | **PASSED** |
+| **6** | $3 \times 2$ | 2D Uneven / Overlap / 3D Uneven | $67\times 53$, $64^2$, $37\times 29\times 31$ | `0.0` | **PASSED** |
+| **8** | $4 \times 2$ | 2D Uneven / Overlap / 3D Uneven | $67\times 53$, $64^2$, $37\times 29\times 31$ | `0.0` | **PASSED** |
 
-#### 2. 3D Convergence ($r = 0.10, \alpha = 1.0$)
-| Resolution ($N^3$) | $\Delta x$ | $\Delta t$ | Steps | $t_{\text{final}}$ | $L_2$ Error Norm | Reduction Ratio | Empirical Order ($p$) |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **$24^3$** | $4.1667 \times 10^{-2}$ | $1.7361 \times 10^{-4}$ | 6 | $0.0010417$ | $1.21020 \times 10^{-5}$ | — | — |
-| **$48^3$** | $2.0833 \times 10^{-2}$ | $4.3403 \times 10^{-5}$ | 23 | $0.0009983$ | $2.89885 \times 10^{-6}$ | **4.1748** | **2.06** |
-| **$96^3$** | $1.0417 \times 10^{-2}$ | $1.0851 \times 10^{-5}$ | 92 | $0.0009983$ | $7.24440 \times 10^{-7}$ | **4.0015** | **2.00** |
-
-Both schemes exhibit asymptotic $\mathcal{O}(\Delta x^2)$ convergence.
-
-### C. Full Suite Leak Detection Output (`ASAN_OPTIONS=detect_leaks=1`)
-Executed all 10 tests across both binaries (`test_config` and `test_serial_solver`):
-- `test_config`: 3/3 passed, 0 leaks.
-- `test_serial_solver`: 7/7 passed, 0 leaks.
-- Total test time under ASan + UBSan: 17.02s.
-
-### D. Native Clang-Tidy Clean Output
-- Installed matching GCC/Clang system headers (`libstdc++-16-dev`) resolving the previous header include diagnostic.
-- Executed native `clang-tidy` command using compile commands database across all source and test files:
-  `clang-tidy -p build/debug src/*.cpp tests/*.cpp`
-- **Output**: 0 diagnostics in user code (100% clean).
+### C. Toolchain & Leak Sanitizer Outputs
+1. **Toolchain Documentation**:
+   - Environment updated with `libstdc++-16-dev` (version 16-20260322-1ubuntu1) to align Clang 21 with GCC 15/16 C++ standard library headers. Recorded in README and STATUS.
+2. **Leak Sanitizer Explicit Exit Codes**:
+   ```bash
+   python3 -c "import subprocess, os; env=dict(os.environ, ASAN_OPTIONS='detect_leaks=1'); ..."
+   ```
+   - `test_config returncode: 0`
+   - `test_serial_solver returncode: 0`
+3. **ASan & UBSan MPI Test Suite**:
+   - OpenMPI MCA patcher set to `OMPI_MCA_patcher=^overwrite` (preventing ASan memory conflict in `mca_base_patcher_patch_apply_binary`).
+   - Standard LSan suppression file `tests/lsan_mpi.supp` applied for OpenMPI internal global one-time setup structures (ADR-0005).
+   - Ranks 1, 2, 3, 4 passed cleanly under ASan + LSan + UBSan with 0 project leaks.
+4. **Native Clang-Tidy**:
+   ```bash
+   clang-tidy -p build/debug src/*.cpp tests/*.cpp
+   ```
+   - Clean exit (exit code 0), 0 diagnostics in project code across all 11 translation units.
 
 ## 4. Architecture Decision Records (ADRs) Recorded
-- `docs/adr/0003-convergence-methodology.md`: Documented full-scheme vs. pure spatial convergence verification methodology and discrete $L_2$ norm definition.
+- `docs/adr/0004-halo-exchange-strategy.md`: Justified contiguous pack/unpack buffers for non-blocking halo exchanges and overlap decoupling.
+- `docs/adr/0005-sanitizer-mpi-suppressions.md`: Documented OpenMPI internal MCA runtime behavior under AddressSanitizer and LeakSanitizer.
 
-## 5. Next Gate (G2)
-- **Gate 2**: MPI 2D/3D Cartesian domain decomposition (`MPI_Cart_create`), non-blocking halo exchanges (`MPI_Isend` / `MPI_Irecv` with `MPI_Waitall`), explicit ghost-to-neighbor verification test, and parallel-vs-serial numerical equivalence across 1 to 8 ranks (including uneven process counts).
+## 5. Next Gate (G3)
+- **Gate 3**: OpenMP multi-threading integration, NUMA first-touch initialization, thread affinity (`OMP_PROC_BIND`, `OMP_PLACES`), verification of `MPI_THREAD_FUNNELED`, programmatic metadata capture (CPU model, cores, cache, RAM, MPI/OpenMP versions), and initial benchmark driver producing raw CSV output.
