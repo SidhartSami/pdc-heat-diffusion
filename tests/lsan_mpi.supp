@@ -5,8 +5,3 @@ leak:/libuct
 leak:/libucp
 leak:/libevent
 leak:/libhsa-runtime
-leak:pmix_
-leak:PMIx_
-leak:opal_
-leak:ompi_
-leak:PMPI_Init
