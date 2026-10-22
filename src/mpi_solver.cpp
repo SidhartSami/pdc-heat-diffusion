@@ -179,6 +179,8 @@ void MpiSolver::step2DNoOverlap(Grid2D& u_old, Grid2D& u_new, HaloExchange2D& ha
     const double rx = m_config.alpha * m_config.dt / (dx * dx);
     const double ry = m_config.alpha * m_config.dt / (dy * dy);
 
+    #pragma omp parallel for collapse(2) default(none) \
+        shared(u_old, u_new, nx, ny, rx, ry) schedule(static)
     for (int j = 1; j <= ny; ++j) {
         for (int i = 1; i <= nx; ++i) {
             const double center = u_old(i, j);
@@ -202,6 +204,8 @@ void MpiSolver::step2DOverlap(Grid2D& u_old, Grid2D& u_new, HaloExchange2D& halo
     halo.startExchange(u_old);
 
     // 2. Compute interior domain (cells [2, nx-1] x [2, ny-1])
+    #pragma omp parallel for collapse(2) default(none) \
+        shared(u_old, u_new, nx, ny, rx, ry) schedule(static)
     for (int j = 2; j <= ny - 1; ++j) {
         for (int i = 2; i <= nx - 1; ++i) {
             const double center = u_old(i, j);
@@ -270,6 +274,8 @@ void MpiSolver::step3DNoOverlap(Grid3D& u_old, Grid3D& u_new, HaloExchange3D& ha
     const double ry = m_config.alpha * m_config.dt / (dy * dy);
     const double rz = m_config.alpha * m_config.dt / (dz * dz);
 
+    #pragma omp parallel for collapse(3) default(none) \
+        shared(u_old, u_new, nx, ny, nz, rx, ry, rz) schedule(static)
     for (int k = 1; k <= nz; ++k) {
         for (int j = 1; j <= ny; ++j) {
             for (int i = 1; i <= nx; ++i) {
@@ -300,6 +306,8 @@ void MpiSolver::step3DOverlap(Grid3D& u_old, Grid3D& u_new, HaloExchange3D& halo
     halo.startExchange(u_old);
 
     // 2. Interior computation
+    #pragma omp parallel for collapse(3) default(none) \
+        shared(u_old, u_new, nx, ny, nz, rx, ry, rz) schedule(static)
     for (int k = 2; k <= nz - 1; ++k) {
         for (int j = 2; j <= ny - 1; ++j) {
             for (int i = 2; i <= nx - 1; ++i) {
