@@ -11,27 +11,27 @@ namespace heat {
  */
 class SerialSolver {
   public:
-    explicit SerialSolver(const Config& config);
+    explicit SerialSolver(Config config);
 
     /**
      * @brief Executes single FTCS step for 2D grid.
      */
-    void step2D(const Grid2D& u_old, Grid2D& u_new);
+    void step2D(const Grid2D& u_old, Grid2D& u_new) const;
 
     /**
      * @brief Executes single FTCS step for 3D grid.
      */
-    void step3D(const Grid3D& u_old, Grid3D& u_new);
+    void step3D(const Grid3D& u_old, Grid3D& u_new) const;
 
     /**
      * @brief Runs full 2D simulation and returns final grid.
      */
-    Grid2D run2D();
+    [[nodiscard]] Grid2D run2D() const;
 
     /**
      * @brief Runs full 3D simulation and returns final grid.
      */
-    Grid3D run3D();
+    [[nodiscard]] Grid3D run3D() const;
 
     [[nodiscard]] const Config& config() const noexcept { return m_config; }
 

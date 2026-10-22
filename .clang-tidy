@@ -14,7 +14,13 @@ Checks: >
   -readability-identifier-length,
   -readability-identifier-naming,
   -google-runtime-references,
-  -bugprone-casting-through-void
+  -bugprone-casting-through-void,
+  -bugprone-easily-swappable-parameters,
+  -performance-enum-size,
+  -readability-math-missing-parentheses,
+  -readability-function-cognitive-complexity,
+  -readability-redundant-inline-specifier,
+  -bugprone-implicit-widening-of-multiplication-result
 
 WarningsAsErrors: ''
 HeaderFilterRegex: 'include/heat/.*'

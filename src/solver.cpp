@@ -2,11 +2,12 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 
 namespace heat {
 
-SerialSolver::SerialSolver(const Config& config)
-    : m_config(config) {
+SerialSolver::SerialSolver(Config config)
+    : m_config(std::move(config)) {
     if (!m_config.isStable()) {
         throw std::runtime_error(
             "Explicit FTCS stability violation: dt=" + std::to_string(m_config.dt) +
@@ -14,7 +15,7 @@ SerialSolver::SerialSolver(const Config& config)
     }
 }
 
-void SerialSolver::step2D(const Grid2D& u_old, Grid2D& u_new) {
+void SerialSolver::step2D(const Grid2D& u_old, Grid2D& u_new) const {
     const int nx = u_old.nx();
     const int ny = u_old.ny();
     const double dx = 1.0 / static_cast<double>(nx);
@@ -32,7 +33,7 @@ void SerialSolver::step2D(const Grid2D& u_old, Grid2D& u_new) {
     }
 }
 
-void SerialSolver::step3D(const Grid3D& u_old, Grid3D& u_new) {
+void SerialSolver::step3D(const Grid3D& u_old, Grid3D& u_new) const {
     const int nx = u_old.nx();
     const int ny = u_old.ny();
     const int nz = u_old.nz();
@@ -57,7 +58,7 @@ void SerialSolver::step3D(const Grid3D& u_old, Grid3D& u_new) {
     }
 }
 
-Grid2D SerialSolver::run2D() {
+Grid2D SerialSolver::run2D() const {
     Grid2D u_old(m_config.nx, m_config.ny);
     Grid2D u_new(m_config.nx, m_config.ny);
 
@@ -78,7 +79,7 @@ Grid2D SerialSolver::run2D() {
     return u_old;
 }
 
-Grid3D SerialSolver::run3D() {
+Grid3D SerialSolver::run3D() const {
     Grid3D u_old(m_config.nx, m_config.ny, m_config.nz);
     Grid3D u_new(m_config.nx, m_config.ny, m_config.nz);
 
