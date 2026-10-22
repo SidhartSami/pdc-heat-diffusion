@@ -16,7 +16,7 @@ option(HEAT_ENABLE_WERROR "Treat compiler warnings as errors" ON)
 
 # Compiler Warnings and Flags
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(-Wall -Wextra -Wpedantic)
+    add_compile_options(-Wall -Wextra -Wpedantic -ffp-contract=off)
     if(HEAT_ENABLE_WERROR)
         add_compile_options(-Werror)
     endif()
