@@ -84,7 +84,8 @@ int main(int argc, char** argv) {
                   << " CPU Model: " << getCpuModel() << "\n"
                   << " Physical Topology: 12 cores (4 P-cores + 8 E-cores), 16 logical CPUs\n"
                   << " MPI Ranks: " << size << ", OpenMP Threads/Rank: " << omp_threads << "\n"
-                  << " OpenMP Runtime Version: OpenMP " << _OPENMP << " (Standard 4.5)\n"
+                  << " OpenMP Runtime: Version " << _OPENMP << " (Standard 4.5), Dynamic Adjustment: "
+                  << (omp_get_dynamic() ? "ENABLED" : "DISABLED") << "\n"
                   << " Note: OMP_PLACES and OMP_PROC_BIND affinity controls were introduced in OpenMP 4.0 (Section 4.4)\n";
         if (omp_places_env != nullptr || omp_bind_env != nullptr) {
             std::cout << " Standard Pinning (OpenMP 4.0): OMP_PLACES=" << omp_places_str
