@@ -184,3 +184,23 @@ Measured on `configs/large_3d.cfg` ($512^3$, 50 steps, Dirichlet sine mode, 1R1T
 3. **Telemetry & Frequency Limitation**: CPU frequency in `/proc/cpuinfo` reported a static `3110.402 MHz` across all runs, but virtualized cpufreq reporting in WSL2 does not measure physical core frequency directly and cannot verify whether hardware frequency scaling occurred. Average load averages were symmetric ($0.98$ baseline vs $0.99$ tiled).
 4. **Governing Outcome**: **Improvement claimed under Option A** ($\\Delta_{\text{max}} = -0.705648\text{ s} < 0$, 20/20 pairs strictly negative).
 5. **Scope of Claim**: This measured improvement applies strictly to the tested configuration ($512^3$, 50 steps, Dirichlet sine, 1 OpenMP thread pinned to Core 0, single session, tile shape $B_z=32, B_y=32$). Performance improvements beyond this tested scope are not established.
+
+#### Default-Path Empirical Interleaved Verification Results (`bench/benchmark_g4_default_interleaved.csv`)
+- **Paired Differences ($\delta_i = T_{07ae288, i} - T_{49e68a1, i}$)**:
+  - Pair 1 (Lead: 49e68a1): 49e68a1 $21.847042\text{ s}$, 07ae288 $21.853906\text{ s}$, $\delta = +0.006864\text{ s}$ ($+0.03\%$)
+  - Pair 2 (Lead: 07ae288): 07ae288 $22.230785\text{ s}$, 49e68a1 $21.859024\text{ s}$, $\delta = +0.371761\text{ s}$ ($+1.70\%$)
+  - Pair 3 (Lead: 49e68a1): 49e68a1 $22.091342\text{ s}$, 07ae288 $20.894372\text{ s}$, $\delta = -1.196970\text{ s}$ ($-5.42\%$)
+  - Pair 4 (Lead: 07ae288): 07ae288 $20.697982\text{ s}$, 49e68a1 $21.586667\text{ s}$, $\delta = -0.888685\text{ s}$ ($-4.12\%$)
+  - Pair 5 (Lead: 49e68a1): 49e68a1 $22.120322\text{ s}$, 07ae288 $21.488272\text{ s}$, $\delta = -0.632050\text{ s}$ ($-2.86\%$)
+  - Pair 6 (Lead: 07ae288): 07ae288 $22.003530\text{ s}$, 49e68a1 $21.294940\text{ s}$, $\delta = +0.708590\text{ s}$ ($+3.33\%$)
+  - Pair 7 (Lead: 49e68a1): 49e68a1 $22.043086\text{ s}$, 07ae288 $21.295461\text{ s}$, $\delta = -0.747625\text{ s}$ ($-3.39\%$)
+  - Pair 8 (Lead: 07ae288): 07ae288 $21.828500\text{ s}$, 49e68a1 $21.061924\text{ s}$, $\delta = +0.766576\text{ s}$ ($+3.64\%$)
+  - Pair 9 (Lead: 49e68a1): 49e68a1 $21.720875\text{ s}$, 07ae288 $21.470936\text{ s}$, $\delta = -0.249939\text{ s}$ ($-1.15\%$)
+  - Pair 10 (Lead: 07ae288): 07ae288 $20.750981\text{ s}$, 49e68a1 $20.578444\text{ s}$, $\delta = +0.172537\text{ s}$ ($+0.84\%$)
+- **Statistical Summary**:
+  - $\delta_{\text{min}} = -1.196970\text{ s}$, $\delta_{\text{max}} = +0.766576\text{ s}$ (zero inclusion satisfied: $\delta_{\text{min}} \le 0 \le \delta_{\text{max}}$).
+  - Median $\delta = -0.121538\text{ s}$.
+  - Baseline Median ($49e68a1$): $21.783958\text{ s}$, Default Median ($07ae288$): $21.479604\text{ s}$.
+  - Relative median shift: **$-0.56\%$** (bounded within $\pm 2.0\%$).
+  - 95% Bootstrap Confidence Interval for median $\delta$: **$[-0.748\text{ s}, +0.441\text{ s}]$** (contains zero).
+- **Formal Conclusion**: Both pre-stated equivalence conditions hold, and the 95% bootstrap confidence interval contains zero. The default unblocked path on `07ae288` exhibits **no measurable difference** from the approved base `49e68a1`.
