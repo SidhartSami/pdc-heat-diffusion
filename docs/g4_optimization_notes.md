@@ -37,7 +37,7 @@
   - Total active 4-plane working set:
     $$3 \text{ read planes } (3 \times 2.11\text{ MB} = 6.33\text{ MB}) + 1 \text{ write plane } (2.11\text{ MB}) = \mathbf{8.44\text{ MB}}$$
   - **L2 Cache Eviction**: $8.44\text{ MB} \gg 1.25\text{ MB}$ (exceeding L2 capacity by $\approx 6.75\times$). During unblocked sequential traversal through plane $k$, earlier cells of planes $k-1, k,$ and $k+1$ are evicted from L2 cache.
-  - **L3 Plane Survival Expectation**: The total grid size ($2.17\text{ GB}$) vastly exceeds the $18\text{ MB}$ L3 cache, so L3 holds only a dynamic window of the grids. The architectural question is whether the active $8.44\text{ MB}$ plane slice survives in L3 between pass $k$ and pass $k+1$. Because $8.44\text{ MB} < 18\text{ MB}$, the planes are expected to survive in L3 rather than thrashing to main memory DRAM. Consequently, the primary mechanism of any spatial blocking gain is **converting L3 hits into L2 hits** (saving L3 latency and L3-to-L2 bus bandwidth), rather than reducing DRAM bandwidth starvation.
+  - **L3 Plane Survival Expectation**: The total grid size ($2.17\text{ GB}$) vastly exceeds the $18\text{ MB}$ L3 cache, so L3 holds only a dynamic window of the grids. The prediction assumes L3 retention of the active $8.44\text{ MB}$ plane slice between pass $k$ and pass $k+1$ ($8.44\text{ MB} < 18\text{ MB}$). Under this assumption, the gain stems from converting L3 hits into L2 hits (saving L3 latency and L3-to-L2 bus bandwidth). If lines are evicted from L3 to DRAM instead (e.g. from associativity conflict misses or write-allocate thrashing), the latency penalty would be DRAM latency (~150–200 cycles) rather than L3 latency, which would make the potential gain larger.
 
 ### 3. Tiling Traversal & Bounded Prediction
 - **Proposed Tiling Shape**:
@@ -55,12 +55,12 @@
   - $524\text{ KB} < 1.25\text{ MB}$, fitting inside the dedicated L2 cache.
 - **Estimated Inputs & Bounded Gain Calculation**:
   - We model total execution time as $T = T_{\text{compute}} + T_{\text{stall}}$, where memory access stalls account for an estimated fraction $f_{\text{stall}} = T_{\text{stall}} / T \approx 0.20\text{ to }0.30$ (assumed input based on arithmetic-light stencil rooflines on x86 cores).
-  - Unblocked execution incurs L2 capacity misses serviced by L3 (assumed latency ratio $L_{\text{L2}} / L_{\text{L3}} \approx 12\text{ cycles} / 35\text{ cycles} \approx 0.34$, an assumed latency reduction fraction $\Delta_{\text{latency}} \approx 1 - 0.34 = 0.66$).
+  - Unblocked execution incurs L2 capacity misses serviced by L3 (assumed latency ratio $L_{\text{L2}} / L_{\text{L3}} \approx 12\text{ cycles} / 35\text{ cycles} \approx 0.343$, giving an assumed latency reduction fraction $\Delta_{\text{latency}} = 1 - 12/35 \approx 0.657 \approx 0.66$).
   - Assuming spatial blocking eliminates L2 capacity misses for planes $k-1$ and $k$ (which comprise half the read streams, factor $s_{\text{reuse}} \approx 0.5$ to $0.7$), the expected fraction of runtime saved is bounded by:
     $$\text{Gain} \approx f_{\text{stall}} \times s_{\text{reuse}} \times \Delta_{\text{latency}}$$
-    - Lower bound: $0.20 \times 0.50 \times 0.66 \approx 6.6\% \approx 5\%$
-    - Upper bound: $0.30 \times 0.70 \times 0.66 \approx 13.9\% \approx 15\%$
-  - This calculation yields the bounded prediction of **$5\%\text{ to }15\%$**.
+    - Lower bound: $0.20 \times 0.50 \times 0.657 = 0.0657 \implies \mathbf{6.6\%}$
+    - Upper bound: $0.30 \times 0.70 \times 0.657 = 0.1380 \implies \mathbf{13.9\%}$
+  - This calculation yields the bounded prediction of **$6.6\%\text{ to }13.9\%$**.
   - **Caveat**: If hardware stream prefetchers already hide L3 latency during sequential row traversal, the actual stall fraction $f_{\text{stall}}$ may be near zero, in which case the measured gain will be smaller or neutral.
 
 ---
