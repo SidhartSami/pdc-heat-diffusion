@@ -164,14 +164,18 @@ Measured on `configs/large_3d.cfg` ($512^3$, 50 steps, Dirichlet sine mode, 1R1T
       2. Median bound: $|\text{Median}(\delta)| / \text{Median}(T_{49e68a1}) \le 2.0\%$ (median shift is within $\pm 2.0\%$).
     - If both conditions hold, the default path is formally classified as **no measurable difference** (consistent with unchanged performance).
     - *Methodological Caveat*: Given run-to-run variance, a 10-pair spread $\delta_{\text{min}} \le 0 \le \delta_{\text{max}}$ is a weak test that can include zero by chance; the 95% bootstrap confidence interval of the median difference is reported alongside it to characterize the bound on any undetectable shift.
-- **Disassembly Audit**:
-  - Extracted floating-point instructions from `step3DNoOverlap._omp_fn.0`:
-    - Total FP instructions in inner stencil: **45 instructions** in both binaries.
-    - Breakdown (verified by mnemonic extraction):
-      - Scalar arithmetic: **26 instructions** (14 `addsd`, 6 `subsd`, 6 `mulsd`).
-      - Register copies: **6 instructions** (6 `movapd`).
-      - Memory load/store moves: **13 instructions** (12 scalar loads `movsd xmm, [mem]`, 1 store `movsd [mem], xmm0`).
-  - Disassembly Diff: Normalizing register names (`r9`, `r13`, `rax`, `rbx`) and jump targets, the 45-instruction sequence of mathematical operations is identical.
+- **Disassembly Audit & Addressing Form Comparison**:
+  - Raw extracted disassembly files are committed for direct reproducibility:
+    - [`bench/disasm_3d_step_49e68a1_raw.s`](file:///C:/University/PDC/Project/bench/disasm_3d_step_49e68a1_raw.s)
+    - [`bench/disasm_3d_step_07ae288_raw.s`](file:///C:/University/PDC/Project/bench/disasm_3d_step_07ae288_raw.s)
+    - Loop body extracts: [`bench/loop_body_49e68a1_raw.s`](file:///C:/University/PDC/Project/bench/loop_body_49e68a1_raw.s) and [`bench/loop_body_07ae288_raw.s`](file:///C:/University/PDC/Project/bench/loop_body_07ae288_raw.s).
+  - **Loop Instruction & Addressing Analysis**:
+    - The compiled loop bodies differ in loop-control index structure and memory addressing forms.
+    - In `49e68a1`, base pointer `r9` uses index addressing `[r9+rax*8]`.
+    - In `07ae288`, the additional loop nest level causes the compiler to allocate base pointer `r13` with indexed-displacement addressing `[r13+rax*8+0x0]` and different register choices (`rbp` vs `rsi`, `rcx` vs `rdi`, `rbx` vs `rdx`).
+    - The loop-stride loop counter is tracked differently: `49e68a1` compares against stack (`cmp r14, [rsp+0x70]; jne`), whereas `07ae288` uses an explicit register increment and signed comparison (`add r12, 1; cmp [rsp+0x58], r12d; jge`).
+    - **Conclusion on Disassembly**: The two loop bodies compile to different instruction sequences and addressing expressions; they are **not identical**.
+    - **Governing Proof**: The claim of equivalence for the default path relies on the empirical 10-pair interleaved timing measurement under the committed decision rule, which demonstrated no measurable performance difference between the two compiled binaries.
 - **Outlier and Sign-Test Invariance**: Pair 8's baseline run ($28.48\text{ s}$) drove $\Delta_{\text{min}}$, but because it was negative, it did not alter the sign test: all 20/20 pairs remained strictly negative.
 - **Spread Comparison**:
   - Baseline Spread: $7.861738\text{ s}$ (or $1.389964\text{ s}$ across the other 19 runs)
@@ -203,4 +207,4 @@ Measured on `configs/large_3d.cfg` ($512^3$, 50 steps, Dirichlet sine mode, 1R1T
   - Baseline Median ($49e68a1$): $21.783958\text{ s}$, Default Median ($07ae288$): $21.479604\text{ s}$.
   - Relative median shift: **$-0.56\%$** (bounded within $\pm 2.0\%$).
   - 95% Bootstrap Confidence Interval for median $\delta$: **$[-0.748\text{ s}, +0.441\text{ s}]$** (contains zero).
-- **Formal Conclusion**: Both pre-stated equivalence conditions hold, and the 95% bootstrap confidence interval contains zero. The default unblocked path on `07ae288` exhibits **no measurable difference** from the approved base `49e68a1`.
+- **Formal Conclusion**: Both pre-stated equivalence conditions hold ($\delta_{\text{min}} = -1.20\text{ s} \le 0 \le \delta_{\text{max}} = +0.77\text{ s}$, median shift $-0.56\% \in [\pm 2.0\%]$), and the 95% bootstrap confidence interval contains zero. The 10-pair sign split is balanced (5 positive, 5 negative). The default unblocked path on `07ae288` exhibits **no measurable difference at this sample size** from the approved base `49e68a1`.
