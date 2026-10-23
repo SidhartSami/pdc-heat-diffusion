@@ -68,14 +68,16 @@
       - Lower bound (DRAM): $0.20 \times 0.50 \times 0.931 = 0.0931 \implies \mathbf{9.3\%}$
       - Upper bound (DRAM): $0.30 \times 0.70 \times 0.931 = 0.1955 \implies \mathbf{19.5\%}$
     - Thus, if unblocked misses reach DRAM, the conditional predicted range is **$9.3\%\text{ to }19.5\%$**.
-  - **Decision Rule (Pre-Measurement)**:
-    - Baseline median: $25.18\text{ s}$, baseline spread: $2.40\text{ s}$.
-    - Committed baseline noise band: **$[22.78\text{ s}, 27.58\text{ s}]$** ($25.18\text{ s} \pm 2.40\text{ s}$).
-    - Any measured median falling inside this band is classified strictly as **no measurable difference**.
-    - Only a measured median outside this band qualifies as a **measured change**.
-    - **Interleaved 20-Pair Criteria (Pre-Stated Prior to Data Inspection)**:
-      1. *Paired Difference Test*: For each pair $i$, calculate $\Delta_i = T_{\text{tiled}, i} - T_{\text{baseline}, i}$. To claim a measured improvement, the paired differences must be consistently negative such that both the median $\Delta$ and its spread exclude zero ($\Delta_{\text{max}} < 0$). If the paired difference spread overlaps zero ($\Delta_{\text{max}} \ge 0$), the outcome is reported as **no measurable difference**.
-      2. *Variance Consistency*: The tiled spread must be compared directly against the baseline spread ($2.40\text{ s}$). If the tiled distribution exhibits elevated spread driven by high-variance outliers while overlapping the baseline band, the result remains neutral.
+  - **Decision Rule & Interleaved Protocol Specification (Pre-Committed)**:
+    - The evaluation of 3D spatial cache blocking ($B_z = 32, B_y = 32$) is strictly governed by a 20-pair interleaved A/B benchmark (40 runs total) with alternating lead order (10 pairs baseline-first, 10 pairs tiled-first) to eliminate both thermal drift and first-run cache advantage.
+    - **Primary Decision Rule (Option A - Strict Paired Sign Test)**:
+      - For each interleaved pair $i \in [1, 20]$, define the paired difference:
+        $$\Delta_i = T_{\text{tiled}, i} - T_{\text{baseline}, i}$$
+      - **Measured Improvement Criterion**: A measured improvement is claimed if and only if **every** paired difference is strictly negative:
+        $$\Delta_{\text{max}} = \max_{i=1}^{20} \Delta_i < 0$$
+      - If even a single pair exhibits $\Delta_i \ge 0$ (i.e. $\Delta_{\text{max}} \ge 0$), the outcome is formally and strictly classified as **no measurable difference**.
+    - **Single Governing Test**: This paired test $\Delta_{\text{max}} < 0$ is the sole test deciding the optimization outcome. The earlier unpaired distribution band ($[22.78\text{ s}, 27.58\text{ s}]$) applies strictly to standalone unpaired sets and is superseded by this paired protocol.
+    - **Variance Analysis**: Tiled spread is reported alongside baseline spread. If the tiled spread exceeds the baseline spread by more than $1.5\times$, it is reported as elevated variance.
   - **Caveat**: If hardware stream prefetchers already hide memory latency during sequential row traversal, the actual stall fraction $f_{\text{stall}}$ may be near zero, in which case the measured gain will be smaller or neutral.
 
 ---
