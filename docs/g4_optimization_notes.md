@@ -69,9 +69,13 @@
       - Upper bound (DRAM): $0.30 \times 0.70 \times 0.931 = 0.1955 \implies \mathbf{19.5\%}$
     - Thus, if unblocked misses reach DRAM, the conditional predicted range is **$9.3\%\text{ to }19.5\%$**.
   - **Decision Rule (Pre-Measurement)**:
-    - Baseline median: $25.18\text{ s}$, baseline spread: $2.40\text{ s}$ ($23.98\text{ s} - 26.38\text{ s}$ band, $\pm 1.20\text{ s}$).
-    - Any measured median difference inside the baseline noise spread band is reported as **no measurable difference**.
-    - Only a measured median change outside that band is reported as **measured change**.
+    - Baseline median: $25.18\text{ s}$, baseline spread: $2.40\text{ s}$.
+    - Committed baseline noise band: **$[22.78\text{ s}, 27.58\text{ s}]$** ($25.18\text{ s} \pm 2.40\text{ s}$).
+    - Any measured median falling inside this band is classified strictly as **no measurable difference**.
+    - Only a measured median outside this band qualifies as a **measured change**.
+    - **Interleaved 20-Pair Criteria (Pre-Stated Prior to Data Inspection)**:
+      1. *Paired Difference Test*: For each pair $i$, calculate $\Delta_i = T_{\text{tiled}, i} - T_{\text{baseline}, i}$. To claim a measured improvement, the paired differences must be consistently negative such that both the median $\Delta$ and its spread exclude zero ($\Delta_{\text{max}} < 0$). If the paired difference spread overlaps zero ($\Delta_{\text{max}} \ge 0$), the outcome is reported as **no measurable difference**.
+      2. *Variance Consistency*: The tiled spread must be compared directly against the baseline spread ($2.40\text{ s}$). If the tiled distribution exhibits elevated spread driven by high-variance outliers while overlapping the baseline band, the result remains neutral.
   - **Caveat**: If hardware stream prefetchers already hide memory latency during sequential row traversal, the actual stall fraction $f_{\text{stall}}$ may be near zero, in which case the measured gain will be smaller or neutral.
 
 ---
