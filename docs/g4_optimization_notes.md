@@ -106,3 +106,56 @@ Measured on `configs/large_3d.cfg` (50 steps, Dirichlet sine mode, 1R1T, Core 0 
 - **Max**: $26.857539\text{ s}$
 - **Spread**: **$2.398984\text{ s}$** ($9.5\%$ of median, comparable in relative terms to the 2D baseline spread of $5.1\%$).
 - Reps 7, 8, and 9 were slower ($25.9\text{ s}$–$26.9\text{ s}$); the cause is unexplained (possibly background OS scheduling or thermal variance across the continuous ~4.5-minute run). The median ($25.18\text{ s}$) represents the baseline reference.
+
+---
+
+### 5. Final 20-Pair Interleaved A/B Benchmark Results (Governing Outcome)
+
+Measured on `configs/large_3d.cfg` ($512^3$, 50 steps, Dirichlet sine mode, 1R1T, Core 0 pinned) under a 20-pair balanced interleaved protocol (40 runs total) with alternating lead order, preceded by 1 warmup per configuration (`bench/benchmark_g4_3d_interleaved.csv`).
+
+#### Paired Differences ($\Delta_i = T_{\text{tiled}, i} - T_{\text{baseline}, i}$)
+- **Pair 1** (Lead: Base ): Base $21.527140\text{ s}$, Tiled $20.821492\text{ s}$, $\Delta = -0.705648\text{ s}$ ($-3.28\%$)
+- **Pair 2** (Lead: Tiled): Tiled $20.007825\text{ s}$, Base $21.420817\text{ s}$, $\Delta = -1.412992\text{ s}$ ($-6.60\%$)
+- **Pair 3** (Lead: Base ): Base $21.534446\text{ s}$, Tiled $20.772313\text{ s}$, $\Delta = -0.762133\text{ s}$ ($-3.54\%$)
+- **Pair 4** (Lead: Tiled): Tiled $20.283392\text{ s}$, Base $22.011708\text{ s}$, $\Delta = -1.728316\text{ s}$ ($-7.85\%$)
+- **Pair 5** (Lead: Base ): Base $21.483591\text{ s}$, Tiled $20.311378\text{ s}$, $\Delta = -1.172213\text{ s}$ ($-5.46\%$)
+- **Pair 6** (Lead: Tiled): Tiled $20.658354\text{ s}$, Base $21.645626\text{ s}$, $\Delta = -0.987272\text{ s}$ ($-4.56\%$)
+- **Pair 7** (Lead: Base ): Base $21.873985\text{ s}$, Tiled $20.174827\text{ s}$, $\Delta = -1.699158\text{ s}$ ($-7.77\%$)
+- **Pair 8** (Lead: Tiled): Tiled $20.122086\text{ s}$, Base $28.483482\text{ s}$, $\Delta = -8.361396\text{ s}$ ($-29.36\%$)
+- **Pair 9** (Lead: Base ): Base $21.663831\text{ s}$, Tiled $20.188202\text{ s}$, $\Delta = -1.475629\text{ s}$ ($-6.81\%$)
+- **Pair 10** (Lead: Tiled): Tiled $20.052389\text{ s}$, Base $21.594569\text{ s}$, $\Delta = -1.542180\text{ s}$ ($-7.14\%$)
+- **Pair 11** (Lead: Base ): Base $21.098109\text{ s}$, Tiled $19.786832\text{ s}$, $\Delta = -1.311277\text{ s}$ ($-6.22\%$)
+- **Pair 12** (Lead: Tiled): Tiled $19.714942\text{ s}$, Base $20.762591\text{ s}$, $\Delta = -1.047649\text{ s}$ ($-5.05\%$)
+- **Pair 13** (Lead: Base ): Base $20.621744\text{ s}$, Tiled $19.454883\text{ s}$, $\Delta = -1.166861\text{ s}$ ($-5.66\%$)
+- **Pair 14** (Lead: Tiled): Tiled $19.800907\text{ s}$, Base $21.166099\text{ s}$, $\Delta = -1.365192\text{ s}$ ($-6.45\%$)
+- **Pair 15** (Lead: Base ): Base $20.725155\text{ s}$, Tiled $19.545066\text{ s}$, $\Delta = -1.180089\text{ s}$ ($-5.69\%$)
+- **Pair 16** (Lead: Tiled): Tiled $19.155744\text{ s}$, Base $20.746546\text{ s}$, $\Delta = -1.590802\text{ s}$ ($-7.67\%$)
+- **Pair 17** (Lead: Base ): Base $20.980297\text{ s}$, Tiled $19.429931\text{ s}$, $\Delta = -1.550366\text{ s}$ ($-7.39\%$)
+- **Pair 18** (Lead: Tiled): Tiled $19.466316\text{ s}$, Base $20.838748\text{ s}$, $\Delta = -1.372432\text{ s}$ ($-6.59\%$)
+- **Pair 19** (Lead: Base ): Base $21.023001\text{ s}$, Tiled $19.699769\text{ s}$, $\Delta = -1.323232\text{ s}$ ($-6.29\%$)
+- **Pair 20** (Lead: Tiled): Tiled $20.087377\text{ s}$, Base $20.982975\text{ s}$, $\Delta = -0.895598\text{ s}$ ($-4.27\%$)
+
+#### Statistical Summary
+- **$\Delta_{\text{max}}$ (Least Negative Difference)**: **$-0.705648\text{ s}$** (Pair 1)
+- **$\Delta_{\text{min}}$ (Most Negative Difference)**: **$-8.361396\text{ s}$** (Pair 8, where Baseline suffered an isolated $28.48\text{ s}$ slow run; across the remaining 19 pairs, $\Delta_{\text{min}} = -1.728316\text{ s}$)
+- **Median Paired Difference ($\\text{Median}(\Delta)$)**: **$-1.344212\text{ s}$**
+- **In-Session Medians**:
+  - Baseline In-Session Median: $21.293458\text{ s}$
+  - Tiled In-Session Median: $20.030107\text{ s}$
+  - Median Relative Gain: **$-6.31\%$**
+- **Lead-Order Split Medians**:
+  - Baseline-lead pairs ($N=10$, odd pairs): Median $\Delta = -1.245683\text{ s}$ (range: $[-1.699\text{ s}, -0.706\text{ s}]$)
+  - Tiled-lead pairs ($N=10$, even pairs): Median $\Delta = -1.392712\text{ s}$ (range: $[-8.361\text{ s}, -0.896\text{ s}]$)
+  - Split medians are consistent with each other, showing that the paired gain is not an artifact of lead-run advantage.
+- **Outlier and Sign-Test Invariance**: Pair 8's baseline run ($28.48\text{ s}$) drove $\Delta_{\text{min}}$, but because it was negative, it did not alter the sign test: all 20/20 pairs remained strictly negative.
+- **Spread Comparison**:
+  - Baseline Spread: $7.861738\text{ s}$ (or $1.389964\text{ s}$ across the other 19 runs)
+  - Tiled Spread: **$1.665748\text{ s}$** (Min: $19.155744\text{ s}$, Max: $20.821492\text{ s}$)
+  - The tiled spread of $1.67\text{ s}$ did not exceed the $3.60\text{ s}$ threshold.
+
+#### Analytical Prediction Comparison & Honest Caveats
+1. **Prediction Comparison**: The measured median gain of **$6.31\%$** is below the predicted range of **$6.6\%\text{ to }13.9\%$** (derived under the L3 retention assumption) and therefore falls just outside the predicted lower bound. The observed reduction is close to the analytical bound, but slightly under it.
+2. **Cross-Session System Drift**: The unblocked baseline median shifted from $25.18\text{ s}$ in the earlier standalone session to $21.29\text{ s}$ in this interleaved session (a $15\%$ shift on identical code). While alternating interleaving controls for drift within a session, absolute wall times are not directly comparable across sessions. The earlier $25.18\text{ s}$ median and $2.40\text{ s}$ spread are not representative references for this session, and the $3.60\text{ s}$ threshold derived from them is a weak cross-session comparison.
+3. **Telemetry & Frequency Limitation**: CPU frequency in `/proc/cpuinfo` reported a static `3110.402 MHz` across all runs, but virtualized cpufreq reporting in WSL2 does not measure physical core frequency directly and cannot verify whether hardware frequency scaling occurred. Average load averages were symmetric ($0.98$ baseline vs $0.99$ tiled).
+4. **Governing Outcome**: **Improvement claimed under Option A** ($\\Delta_{\text{max}} = -0.705648\text{ s} < 0$, 20/20 pairs strictly negative).
+5. **Scope of Claim**: This measured improvement applies strictly to the tested configuration ($512^3$, 50 steps, Dirichlet sine, 1 OpenMP thread pinned to Core 0, single session, tile shape $B_z=32, B_y=32$). Performance improvements beyond this tested scope are not established.
