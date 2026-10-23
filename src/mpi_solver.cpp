@@ -281,17 +281,26 @@ void MpiSolver::step3DNoOverlap(Grid3D& u_old, Grid3D& u_new, HaloExchange3D& ha
     const double ry = m_config.alpha * m_config.dt / (dy * dy);
     const double rz = m_config.alpha * m_config.dt / (dz * dz);
 
+    const int bz = (m_config.block_size_z > 0) ? m_config.block_size_z : nz;
+    const int by = (m_config.block_size_y > 0) ? m_config.block_size_y : ny;
+
     #pragma omp parallel for default(none) \
-        shared(u_old, u_new, nx, ny, nz, rx, ry, rz) schedule(static)
-    for (int k = 1; k <= nz; ++k) {
-        for (int j = 1; j <= ny; ++j) {
-            for (int i = 1; i <= nx; ++i) {
-                const double center = u_old(i, j, k);
-                const double laplacian =
-                    rx * (u_old(i + 1, j, k) - 2.0 * center + u_old(i - 1, j, k)) +
-                    ry * (u_old(i, j + 1, k) - 2.0 * center + u_old(i, j - 1, k)) +
-                    rz * (u_old(i, j, k + 1) - 2.0 * center + u_old(i, j, k - 1));
-                u_new(i, j, k) = center + laplacian;
+        shared(u_old, u_new, nx, ny, nz, rx, ry, rz, bz, by) schedule(static)
+    for (int kk = 1; kk <= nz; kk += bz) {
+        const int k_end = std::min(kk + bz - 1, nz);
+        for (int jj = 1; jj <= ny; jj += by) {
+            const int j_end = std::min(jj + by - 1, ny);
+            for (int k = kk; k <= k_end; ++k) {
+                for (int j = jj; j <= j_end; ++j) {
+                    for (int i = 1; i <= nx; ++i) {
+                        const double center = u_old(i, j, k);
+                        const double laplacian =
+                            rx * (u_old(i + 1, j, k) - 2.0 * center + u_old(i - 1, j, k)) +
+                            ry * (u_old(i, j + 1, k) - 2.0 * center + u_old(i, j - 1, k)) +
+                            rz * (u_old(i, j, k + 1) - 2.0 * center + u_old(i, j, k - 1));
+                        u_new(i, j, k) = center + laplacian;
+                    }
+                }
             }
         }
     }
@@ -313,17 +322,26 @@ void MpiSolver::step3DOverlap(Grid3D& u_old, Grid3D& u_new, HaloExchange3D& halo
     halo.startExchange(u_old);
 
     // 2. Interior computation
+    const int bz = (m_config.block_size_z > 0) ? m_config.block_size_z : (nz - 2);
+    const int by = (m_config.block_size_y > 0) ? m_config.block_size_y : (ny - 2);
+
     #pragma omp parallel for default(none) \
-        shared(u_old, u_new, nx, ny, nz, rx, ry, rz) schedule(static)
-    for (int k = 2; k <= nz - 1; ++k) {
-        for (int j = 2; j <= ny - 1; ++j) {
-            for (int i = 2; i <= nx - 1; ++i) {
-                const double center = u_old(i, j, k);
-                const double laplacian =
-                    rx * (u_old(i + 1, j, k) - 2.0 * center + u_old(i - 1, j, k)) +
-                    ry * (u_old(i, j + 1, k) - 2.0 * center + u_old(i, j - 1, k)) +
-                    rz * (u_old(i, j, k + 1) - 2.0 * center + u_old(i, j, k - 1));
-                u_new(i, j, k) = center + laplacian;
+        shared(u_old, u_new, nx, ny, nz, rx, ry, rz, bz, by) schedule(static)
+    for (int kk = 2; kk <= nz - 1; kk += bz) {
+        const int k_end = std::min(kk + bz - 1, nz - 1);
+        for (int jj = 2; jj <= ny - 1; jj += by) {
+            const int j_end = std::min(jj + by - 1, ny - 1);
+            for (int k = kk; k <= k_end; ++k) {
+                for (int j = jj; j <= j_end; ++j) {
+                    for (int i = 2; i <= nx - 1; ++i) {
+                        const double center = u_old(i, j, k);
+                        const double laplacian =
+                            rx * (u_old(i + 1, j, k) - 2.0 * center + u_old(i - 1, j, k)) +
+                            ry * (u_old(i, j + 1, k) - 2.0 * center + u_old(i, j - 1, k)) +
+                            rz * (u_old(i, j, k + 1) - 2.0 * center + u_old(i, j, k - 1));
+                        u_new(i, j, k) = center + laplacian;
+                    }
+                }
             }
         }
     }

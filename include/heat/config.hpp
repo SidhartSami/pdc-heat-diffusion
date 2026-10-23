@@ -19,6 +19,9 @@ struct Config {
     std::string initial_condition = "sine"; ///< "sine", "gaussian", "step"
     bool overlap = false;                   ///< Enable compute-communication overlap
     int snapshot_freq = 0;                  ///< Snapshot write frequency (0 = disabled)
+    int block_size_x = 0;                   ///< 2D/3D cache block size along X (0 = full row)
+    int block_size_y = 0;                   ///< 2D/3D cache block size along Y (0 = full column)
+    int block_size_z = 0;                   ///< 3D cache block size along Z (0 = full depth)
     std::string output_path = "output/";    ///< Directory for simulation snapshots
 
     /**
