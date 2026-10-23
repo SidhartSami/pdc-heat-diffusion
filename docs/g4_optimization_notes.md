@@ -79,7 +79,7 @@
       - If even a single pair exhibits $\Delta_i \ge 0$ (i.e. $\Delta_{\text{max}} \ge 0$), the outcome is formally and strictly classified as **no measurable difference**.
       - *Conservatism Note*: Option A is an intentionally conservative test. A real but modest ~8% effect subject to random OS jitter could produce a single non-negative pair; classifying $\Delta_{\text{max}} \ge 0$ as "no measurable difference" indicates lack of statistical certainty under strict sign consistency, not proof of zero physical effect.
     - **Single Governing Test**: This paired test $\Delta_{\text{max}} < 0$ is the sole test deciding the optimization outcome. The earlier unpaired distribution band ($[22.78\text{ s}, 27.58\text{ s}]$) applies strictly to standalone sets and is superseded by this paired protocol. The preliminary 10-run uncoupled median (23.11 s) is fully superseded.
-    - **Variance Finding Rule**: The baseline spread is $2.40\text{ s}$, establishing a variance threshold of $1.5\times = 3.60\text{ s}$. If the tiled spread exceeds $3.60\text{ s}$, it is reported as a quantitative finding of elevated variance (instability under memory subsystem pressure), recorded independently of the median outcome.
+    - **Variance Finding Rule**: The baseline spread is $2.40\text{ s}$, establishing a variance threshold of $1.5\times = 3.60\text{ s}$. If the tiled spread exceeds $3.60\text{ s}$, it is reported strictly as "tiled spread exceeds 3.60 s" (without speculative physical attribution to hardware mechanisms).
   - **Caveat**: If hardware stream prefetchers already hide memory latency during sequential row traversal, the actual stall fraction $f_{\text{stall}}$ may be near zero, in which case the measured gain will be smaller or neutral.
 
 ---
