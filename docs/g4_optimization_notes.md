@@ -156,9 +156,22 @@ Measured on `configs/large_3d.cfg` ($512^3$, 50 steps, Dirichlet sine mode, 1R1T
   - Binary A: Built from approved commit `49e68a1` with Release preset (`-O3 -DNDEBUG -std=c++17 -Wall -Wextra -Wpedantic -ffp-contract=off -Werror -fopenmp`).
   - Binary B: Built from optimization commit `07ae288` with identical Release preset and compiler flags.
   - Test configuration: `configs/large_3d.cfg` ($512^3$, 50 steps, Core 0 pinned), running default unblocked execution ($B_z = 0, B_y = 0$).
-  - **Decision Criterion**: An alternating 10-pair interleaved benchmark (20 runs total) defines paired differences $\delta_i = T_{07ae288, i} - T_{49e68a1, i}$. The default path is classified as **no measurable difference** (equivalent to baseline) if the paired differences contain zero and the median relative difference is within $\pm 2.0\%$.
+  - Pre-run protocol: Dedicated warmup run executed for each binary prior to pair 1 to prevent cold-start cache/page-table bias on $\delta_1$.
+  - **Decision Criterion**:
+    - For each interleaved pair $i \in [1, 10]$, define $\delta_i = T_{07ae288, i} - T_{49e68a1, i}$.
+    - Equivalence condition: Both of the following two explicit conditions must hold simultaneously:
+      1. Zero inclusion in difference spread: $\delta_{\text{min}} \le 0 \le \delta_{\text{max}}$ (differences do not exhibit strict sign bias).
+      2. Median bound: $|\text{Median}(\delta)| / \text{Median}(T_{49e68a1}) \le 2.0\%$ (median shift is within $\pm 2.0\%$).
+    - If both conditions hold, the default path is formally classified as **no measurable difference** (consistent with unchanged performance).
+    - *Methodological Caveat*: Given run-to-run variance, a 10-pair spread $\delta_{\text{min}} \le 0 \le \delta_{\text{max}}$ is a weak test that can include zero by chance; the 95% bootstrap confidence interval of the median difference is reported alongside it to characterize the bound on any undetectable shift.
 - **Disassembly Audit**:
-  - Normalizing register allocations and jump target addresses (`cut -c33-` equivalent), both `49e68a1` and `07ae288` compile the inner 7-point stencil kernel into an identical sequence of 45 floating-point instructions (31 scalar arithmetic operations: 15 `addsd`, 6 `subsd`, 6 `mulsd`, 4 `movapd`, plus memory load/store operations).
+  - Extracted floating-point instructions from `step3DNoOverlap._omp_fn.0`:
+    - Total FP instructions in inner stencil: **45 instructions** in both binaries.
+    - Breakdown (verified by mnemonic extraction):
+      - Scalar arithmetic: **26 instructions** (14 `addsd`, 6 `subsd`, 6 `mulsd`).
+      - Register copies: **6 instructions** (6 `movapd`).
+      - Memory load/store moves: **13 instructions** (12 scalar loads `movsd xmm, [mem]`, 1 store `movsd [mem], xmm0`).
+  - Disassembly Diff: Normalizing register names (`r9`, `r13`, `rax`, `rbx`) and jump targets, the 45-instruction sequence of mathematical operations is identical.
 - **Outlier and Sign-Test Invariance**: Pair 8's baseline run ($28.48\text{ s}$) drove $\Delta_{\text{min}}$, but because it was negative, it did not alter the sign test: all 20/20 pairs remained strictly negative.
 - **Spread Comparison**:
   - Baseline Spread: $7.861738\text{ s}$ (or $1.389964\text{ s}$ across the other 19 runs)
