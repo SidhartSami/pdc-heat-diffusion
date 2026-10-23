@@ -37,7 +37,7 @@
   - Total active 4-plane working set:
     $$3 \text{ read planes } (3 \times 2.11\text{ MB} = 6.33\text{ MB}) + 1 \text{ write plane } (2.11\text{ MB}) = \mathbf{8.44\text{ MB}}$$
   - **L2 Cache Eviction**: $8.44\text{ MB} \gg 1.25\text{ MB}$ (exceeding L2 capacity by $\approx 6.75\times$). During unblocked sequential traversal through plane $k$, earlier cells of planes $k-1, k,$ and $k+1$ are evicted from L2 cache.
-  - **L3 Plane Survival Expectation**: The total grid size ($2.17\text{ GB}$) vastly exceeds the $18\text{ MB}$ L3 cache, so L3 holds only a dynamic window of the grids. The prediction assumes L3 retention of the active $8.44\text{ MB}$ plane slice between pass $k$ and pass $k+1$ ($8.44\text{ MB} < 18\text{ MB}$). Under this assumption, the gain stems from converting L3 hits into L2 hits (saving L3 latency and L3-to-L2 bus bandwidth). If lines are evicted from L3 to DRAM instead (e.g. from associativity conflict misses or write-allocate thrashing), the latency penalty would be DRAM latency (~150–200 cycles) rather than L3 latency, which would make the potential gain larger.
+  - **L3 Plane Survival Expectation**: The total grid size ($2.17\text{ GB}$) vastly exceeds the $18\text{ MB}$ L3 cache, so L3 holds only a dynamic window of the grids. The primary prediction assumes L3 retention of the active $8.44\text{ MB}$ plane slice between pass $k$ and pass $k+1$ ($8.44\text{ MB} < 18\text{ MB}$). Under this assumption, the gain stems from converting L3 hits into L2 hits (saving L3 latency and L3-to-L2 bus bandwidth). Alternatively, if associativity conflict misses or write-allocate thrashing evict lines to DRAM, unblocked misses incur DRAM latency (~175 cycles), yielding a separate conditional bound derived below.
 
 ### 3. Tiling Traversal & Bounded Prediction
 - **Proposed Tiling Shape**:
@@ -60,8 +60,19 @@
     $$\text{Gain} \approx f_{\text{stall}} \times s_{\text{reuse}} \times \Delta_{\text{latency}}$$
     - Lower bound: $0.20 \times 0.50 \times 0.657 = 0.0657 \implies \mathbf{6.6\%}$
     - Upper bound: $0.30 \times 0.70 \times 0.657 = 0.1380 \implies \mathbf{13.9\%}$
-  - This calculation yields the bounded prediction of **$6.6\%\text{ to }13.9\%$**.
-  - **Caveat**: If hardware stream prefetchers already hide L3 latency during sequential row traversal, the actual stall fraction $f_{\text{stall}}$ may be near zero, in which case the measured gain will be smaller or neutral.
+  - This calculation yields the bounded prediction of **$6.6\%\text{ to }13.9\%$** for the L3-retention case.
+  - **Conditional Bound (DRAM-Eviction Case)**:
+    - If unblocked traversal fails to retain planes in L3 and spills to DRAM, we recompute with DRAM latency (~175 cycles):
+      $$\Delta_{\text{latency, DRAM}} = 1 - (L_{\text{L2}} / L_{\text{DRAM}}) \approx 1 - (12 / 175) \approx 0.931 \approx 0.93$$
+    - With the same assumed stall ($0.20\text{ to }0.30$) and reuse ($0.50\text{ to }0.70$) fractions:
+      - Lower bound (DRAM): $0.20 \times 0.50 \times 0.931 = 0.0931 \implies \mathbf{9.3\%}$
+      - Upper bound (DRAM): $0.30 \times 0.70 \times 0.931 = 0.1955 \implies \mathbf{19.5\%}$
+    - Thus, if unblocked misses reach DRAM, the conditional predicted range is **$9.3\%\text{ to }19.5\%$**.
+  - **Decision Rule (Pre-Measurement)**:
+    - Baseline median: $25.18\text{ s}$, baseline spread: $2.40\text{ s}$ ($23.98\text{ s} - 26.38\text{ s}$ band, $\pm 1.20\text{ s}$).
+    - Any measured median difference inside the baseline noise spread band is reported as **no measurable difference**.
+    - Only a measured median change outside that band is reported as **measured change**.
+  - **Caveat**: If hardware stream prefetchers already hide memory latency during sequential row traversal, the actual stall fraction $f_{\text{stall}}$ may be near zero, in which case the measured gain will be smaller or neutral.
 
 ---
 
