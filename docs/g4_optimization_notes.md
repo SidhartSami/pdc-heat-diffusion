@@ -143,10 +143,22 @@ Measured on `configs/large_3d.cfg` ($512^3$, 50 steps, Dirichlet sine mode, 1R1T
   - Baseline In-Session Median: $21.293458\text{ s}$
   - Tiled In-Session Median: $20.030107\text{ s}$
   - Median Relative Gain: **$-6.31\%$**
-- **Lead-Order Split Medians**:
+- **Lead-Order Split Medians (Descriptive Only)**:
   - Baseline-lead pairs ($N=10$, odd pairs): Median $\Delta = -1.245683\text{ s}$ (range: $[-1.699\text{ s}, -0.706\text{ s}]$)
   - Tiled-lead pairs ($N=10$, even pairs): Median $\Delta = -1.392712\text{ s}$ (range: $[-8.361\text{ s}, -0.896\text{ s}]$)
-  - Split medians are consistent with each other, showing that the paired gain is not an artifact of lead-run advantage.
+  - *Lead-Order Qualification*: The split medians ($-1.25\text{ s}$ vs $-1.39\text{ s}$) are descriptive only. They demonstrate that both subsets independently yield negative median differences, but this descriptive similarity does not by itself formally exclude order or carry-over effects between runs.
+
+---
+
+### 6. Default Path Verification Against Approved G3 Base (49e68a1)
+
+- **Pre-Stated Decision Rule for Default Path Equivalence**:
+  - Binary A: Built from approved commit `49e68a1` with Release preset (`-O3 -DNDEBUG -std=c++17 -Wall -Wextra -Wpedantic -ffp-contract=off -Werror -fopenmp`).
+  - Binary B: Built from optimization commit `07ae288` with identical Release preset and compiler flags.
+  - Test configuration: `configs/large_3d.cfg` ($512^3$, 50 steps, Core 0 pinned), running default unblocked execution ($B_z = 0, B_y = 0$).
+  - **Decision Criterion**: An alternating 10-pair interleaved benchmark (20 runs total) defines paired differences $\delta_i = T_{07ae288, i} - T_{49e68a1, i}$. The default path is classified as **no measurable difference** (equivalent to baseline) if the paired differences contain zero and the median relative difference is within $\pm 2.0\%$.
+- **Disassembly Audit**:
+  - Normalizing register allocations and jump target addresses (`cut -c33-` equivalent), both `49e68a1` and `07ae288` compile the inner 7-point stencil kernel into an identical sequence of 45 floating-point instructions (31 scalar arithmetic operations: 15 `addsd`, 6 `subsd`, 6 `mulsd`, 4 `movapd`, plus memory load/store operations).
 - **Outlier and Sign-Test Invariance**: Pair 8's baseline run ($28.48\text{ s}$) drove $\Delta_{\text{min}}$, but because it was negative, it did not alter the sign test: all 20/20 pairs remained strictly negative.
 - **Spread Comparison**:
   - Baseline Spread: $7.861738\text{ s}$ (or $1.389964\text{ s}$ across the other 19 runs)
