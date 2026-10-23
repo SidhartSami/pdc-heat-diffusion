@@ -62,3 +62,12 @@ mpirun -np 4 ./build/release/heat_solver --config=configs/small_2d.cfg
 - `configs/`: Sample simulation configuration files.
 - `docs/`: Architecture Decision Records (`docs/adr/`), proposal, viva preparation guide, and report.
 - `results/`: Raw CSV benchmark outputs with complete machine metadata.
+
+## Benchmarking Scope, Baselines & Known Limitations
+
+- **Hardware Scope**: Benchmarks on hybrid Intel Alder Lake architectures (e.g., i5-12500H) are strictly scoped to the dedicated **Performance cores (P-cores 0–3)** mapped via `--bind-to core` (logical CPUs 0, 2, 4, 6) to avoid heterogeneous performance throttling. Scaling past 4 cores onto Efficient cores (E-cores) is outside the current milestone scope.
+- **Parallel Efficiency Baseline**: In the multi-core and multi-process benchmark tables, parallel efficiency is defined relative to the hybrid **MPI 1-Rank 1-Thread baseline ($T_{1,1}$)** under identical runtime initialization.
+- **Serial vs. MPI Comparison**: The serial solver and single-rank MPI solver compile to identical vectorized inner loop kernels (16-byte SSE2). Measured runtime differences between pure serial execution and single-rank MPI execution at $4096^2$ (approx. 20 ms to 100 ms) remain within run-to-run system noise (spread ~130–160 ms).
+- **Small Grid Multi-Threading ($512^2$ 1R4T)**: On small subdomains ($512 \times 512$, ~0.1 s runtimes), scaling efficiency drops to ~31.7% with 4 threads on 1 rank. Hypothesized causes include OpenMP thread barrier synchronization overhead and cache-line contention relative to the short computation duration; larger subdomains ($4096 \times 4096$) sustain linear and near-linear scaling.
+- **CPU Frequency Scaling**: Under virtualized environments (e.g. WSL2), hardware CPU frequency governors (`/sys/devices/system/cpu/cpu*/cpufreq`) are virtualized and real-time per-core clock frequencies are not dynamically sampled during benchmark runs.
+
