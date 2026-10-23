@@ -90,12 +90,6 @@ Config ConfigParser::loadFromFile(const std::string& filepath) {
             cfg.snapshot_freq = std::stoi(val);
         } else if (key == "output_path") {
             cfg.output_path = val;
-        } else if (key == "block_size_x") {
-            cfg.block_size_x = std::stoi(val);
-        } else if (key == "block_size_y") {
-            cfg.block_size_y = std::stoi(val);
-        } else if (key == "block_size_z") {
-            cfg.block_size_z = std::stoi(val);
         } else {
             std::cerr << "Warning: Unknown config key '" << key << "' at line " << line_number
                       << "\n";
