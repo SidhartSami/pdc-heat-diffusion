@@ -54,7 +54,7 @@ OMP_NUM_THREADS=1 taskset -c 0,2,4,6 mpirun --bind-to core -np 4 "${BIN}" "${com
     --snapshot-freq=600 --output=output/demo_full > /dev/null
 OMP_NUM_THREADS=1 taskset -c 0,2,4,6 mpirun --bind-to core -np 4 "${BIN}" "${common[@]}" --steps=300 \
     --checkpoint-freq=300 --checkpoint-path=output/demo_ckpt/ckpt > /dev/null
-echo "  run killed at step 300 (checkpoint written); restarting from it to step 600..."
+echo "  run stopped at step 300 after writing a checkpoint (simulated interruption); restarting from it to step 600..."
 OMP_NUM_THREADS=1 taskset -c 0,2,4,6 mpirun --bind-to core -np 4 "${BIN}" "${common[@]}" --steps=600 \
     --restart-from=output/demo_ckpt/ckpt --snapshot-freq=600 --output=output/demo_restart > /dev/null
 ok=1
