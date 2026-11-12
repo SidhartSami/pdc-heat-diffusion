@@ -1,10 +1,16 @@
 # Parallel Heat Diffusion Simulation on Large 2D/3D Grids (MPI + OpenMP)
 
-[![CI](https://github.com/placeholder/heat-diffusion-parallel/actions/workflows/ci.yml/badge.svg)](https://github.com/placeholder/heat-diffusion-parallel/actions/workflows/ci.yml)
+[![CI](https://github.com/SidhartSami/pdc-heat-diffusion/actions/workflows/ci.yml/badge.svg)](https://github.com/SidhartSami/pdc-heat-diffusion/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Standard](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
 
 Course Reference: Project #12 (Heat Diffusion / Stencil Computation), Hybrid MPI + OpenMP model.
+
+## Authors
+- Sidhart Sami (23I-2527)
+- Abdul Rafy (23P-0560), [@Abdul-Rafy2005](https://github.com/Abdul-Rafy2005)
+
+Parallel and Distributed Computing, section BCS-7A. The project proposal is in `docs/Project_Proposal.pdf`; the final report is in `docs/report/report.md`; current status is in `STATUS.md`.
 
 ## Overview
 This repository implements a high-performance, distributed-memory (MPI) and shared-memory (OpenMP) numerical solver for the 2D and 3D heat diffusion equation:
