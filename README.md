@@ -21,6 +21,17 @@ using an explicit Forward-Time Central-Space (FTCS) finite-difference scheme.
 - **Strict Verification & Rigorous Testing**: Analytic convergence tests (sine mode decay), serial-parallel equivalence, energy conservation, and stability limit verification.
 - **Reproducible Experimentation**: Config-driven runs, programmatic system metadata capture, automated benchmarks, and visualization scripts.
 
+## Results at a glance (4 P-cores, i5-12500H, WSL2; full data in `results/g5/`, report in `docs/report/report.md`)
+- Parallel output is bit-identical to serial for 1-8 ranks (2D and 3D, overlap on/off); 23 tests pass.
+- Strong scaling, pure MPI, 4 cores: **2.80x** (2D 4096^2), **3.22x** (3D 512^3). Memory-bandwidth-bound, so efficiency is sub-linear.
+- Pre-registered overlap test: **no measurable difference** on a single node (2D -2.5%, 3D +2.9%, both CIs include 0).
+- Parallel VTK output (ParaView-ready) and bit-exact checkpoint/restart.
+
+## Demo
+```bash
+./demo.sh        # correctness -> speedup -> visualization -> checkpoint/restart (about 2 min, run in WSL/Linux)
+```
+
 ## Quick Start
 
 ### Prerequisites
@@ -51,14 +62,22 @@ ctest --preset asan-ubsan --output-on-failure
 # Run 2D simulation on 4 MPI ranks with 2 OpenMP threads each
 export OMP_NUM_THREADS=2
 mpirun -np 4 ./build/release/heat_solver --config=configs/small_2d.cfg
+
+# Any config key can be overridden: --nx= --ny= --nz= --dim= --steps= --dt=auto --overlap=true|false
+#   --ic=sine|gaussian|step --boundary=dirichlet|neumann --bz= --by=
+# Output and restart:
+#   --snapshot-freq=N --output=DIR            (VTI/PVTI/PVD, open DIR/heat.pvd in ParaView)
+#   --checkpoint-freq=N --checkpoint-path=P   (writes P_r<rank>.bin)
+#   --restart-from=P                          (resume; same rank count and grid)
+python analysis/visualize.py DIR   # renders PNG contact sheet + GIF from the snapshots
 ```
 
 ## Directory Structure
 - `include/heat/`: Public C++ headers (domain, decomposition, halo exchange, solvers, boundaries, config, timers).
 - `src/`: Implementation files and driver `main.cpp`.
 - `tests/`: GoogleTest test suites.
-- `bench/`: Automated benchmark execution scripts.
-- `analysis/`: Python scripts for data processing and figure generation.
+- `bench/`: Benchmark drivers (`run_g5_scaling.sh`, `run_proposal_size.sh`) and Gate 3/4 data.
+- `analysis/`: `analyze_g5.py` (tables, figures, bootstrap), `visualize.py` (snapshots to PNG/GIF), `figures/`.
 - `configs/`: Sample simulation configuration files.
 - `docs/`: Architecture Decision Records (`docs/adr/`), proposal, viva preparation guide, and report.
 - `results/`: Raw CSV benchmark outputs with complete machine metadata.
