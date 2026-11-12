@@ -1,0 +1,4 @@
+timestamp,cpu_model,ranks,threads_per_rank,dimension,nx,ny,nz,steps,overlap,min_time_s,max_time_s,avg_time_s,megaupdates_per_s,omp_places,omp_proc_bind,block_y,block_z,tag
+1794501464,"12th Gen Intel(R) Core(TM) i5-12500H",1,1,2,8192,8192,1,5000,1,452.577,452.577,452.577,741.409,"cores","close",0,0,proposal;P1_T1;1
+1794501649,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,8192,8192,1,5000,1,184.828,184.828,184.828,1815.44,"cores","close",0,0,proposal;P4_T1;1
+1794501839,"12th Gen Intel(R) Core(TM) i5-12500H",2,2,2,8192,8192,1,5000,1,190.146,190.146,190.146,1764.66,"cores","close",0,0,proposal;P2_T2;1
