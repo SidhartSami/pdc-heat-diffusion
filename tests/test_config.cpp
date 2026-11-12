@@ -66,3 +66,25 @@ TEST(ConfigTest, ParseFromFile) {
 
     std::remove(filename.c_str());
 }
+
+TEST(ConfigTest, CommandLineOverridesAndAutoDt) {
+    const char* argv[] = {"prog",         "--dim=3",      "--nx=64",      "--ny=64",
+                          "--nz=64",      "--dt=auto",    "--overlap=false", "--bz=32",
+                          "--by=16",      "--steps=7",    "--snapshot-freq=5"};
+    heat::Config cfg = heat::ConfigParser::loadFromCommandLine(
+        static_cast<int>(sizeof(argv) / sizeof(argv[0])), const_cast<char**>(argv));
+    EXPECT_EQ(cfg.dimension, 3);
+    EXPECT_FALSE(cfg.overlap);
+    EXPECT_EQ(cfg.block_size_z, 32);
+    EXPECT_EQ(cfg.block_size_y, 16);
+    EXPECT_EQ(cfg.steps, 7);
+    EXPECT_EQ(cfg.snapshot_freq, 5);
+    EXPECT_NEAR(cfg.dt, 0.9 * cfg.maxStableDt(), 1e-18);
+    EXPECT_TRUE(cfg.isStable());
+}
+
+TEST(ConfigTest, UnknownCommandLineOptionIsRejected) {
+    const char* argv[] = {"prog", "--bogus=1"};
+    EXPECT_THROW(heat::ConfigParser::loadFromCommandLine(2, const_cast<char**>(argv)),
+                 std::runtime_error);
+}

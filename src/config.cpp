@@ -35,6 +35,72 @@ double Config::maxStableDt() const {
     return 1.0 / (2.0 * alpha * inv_d_sq);
 }
 
+namespace {
+
+bool parseBool(const std::string& val) {
+    std::string lower = val;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    return lower == "true" || lower == "1" || lower == "yes" || lower == "on";
+}
+
+/// Applies a single key/value pair. Returns false if the key is unknown.
+/// A dt of "auto" selects 0.9 x the FTCS stability limit (after grid sizes are known).
+bool applyOption(Config& cfg, const std::string& key, const std::string& val) {
+    if (key == "dimension" || key == "dim") {
+        cfg.dimension = std::stoi(val);
+    } else if (key == "nx") {
+        cfg.nx = std::stoi(val);
+    } else if (key == "ny") {
+        cfg.ny = std::stoi(val);
+    } else if (key == "nz") {
+        cfg.nz = std::stoi(val);
+    } else if (key == "alpha") {
+        cfg.alpha = std::stod(val);
+    } else if (key == "dt") {
+        if (val == "auto") {
+            cfg.dt_auto = true;
+        } else {
+            cfg.dt_auto = false;
+            cfg.dt = std::stod(val);
+        }
+    } else if (key == "steps") {
+        cfg.steps = std::stoi(val);
+    } else if (key == "boundary") {
+        cfg.boundary = val;
+    } else if (key == "initial_condition" || key == "ic") {
+        cfg.initial_condition = val;
+    } else if (key == "overlap") {
+        cfg.overlap = parseBool(val);
+    } else if (key == "snapshot_freq") {
+        cfg.snapshot_freq = std::stoi(val);
+    } else if (key == "output_path" || key == "output") {
+        cfg.output_path = val;
+    } else if (key == "block_size_x") {
+        cfg.block_size_x = std::stoi(val);
+    } else if (key == "block_size_y") {
+        cfg.block_size_y = std::stoi(val);
+    } else if (key == "block_size_z") {
+        cfg.block_size_z = std::stoi(val);
+    } else if (key == "checkpoint_freq") {
+        cfg.checkpoint_freq = std::stoi(val);
+    } else if (key == "checkpoint_path") {
+        cfg.checkpoint_path = val;
+    } else if (key == "restart_from") {
+        cfg.restart_from = val;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+void finalizeConfig(Config& cfg) {
+    if (cfg.dt_auto) {
+        cfg.dt = 0.9 * cfg.maxStableDt();
+    }
+}
+
+} // namespace
+
 Config ConfigParser::loadFromFile(const std::string& filepath) {
     Config cfg;
     std::ifstream file(filepath);
@@ -61,74 +127,50 @@ Config ConfigParser::loadFromFile(const std::string& filepath) {
                                      std::to_string(line_number) + ": " + line);
         }
 
-        std::string key = trim(line.substr(0, eq_pos));
-        std::string val = trim(line.substr(eq_pos + 1));
-
-        if (key == "dimension") {
-            cfg.dimension = std::stoi(val);
-        } else if (key == "nx") {
-            cfg.nx = std::stoi(val);
-        } else if (key == "ny") {
-            cfg.ny = std::stoi(val);
-        } else if (key == "nz") {
-            cfg.nz = std::stoi(val);
-        } else if (key == "alpha") {
-            cfg.alpha = std::stod(val);
-        } else if (key == "dt") {
-            cfg.dt = std::stod(val);
-        } else if (key == "steps") {
-            cfg.steps = std::stoi(val);
-        } else if (key == "boundary") {
-            cfg.boundary = val;
-        } else if (key == "initial_condition") {
-            cfg.initial_condition = val;
-        } else if (key == "overlap") {
-            std::string lower = val;
-            std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-            cfg.overlap = (lower == "true" || lower == "1" || lower == "yes");
-        } else if (key == "snapshot_freq") {
-            cfg.snapshot_freq = std::stoi(val);
-        } else if (key == "output_path") {
-            cfg.output_path = val;
-        } else if (key == "block_size_x") {
-            cfg.block_size_x = std::stoi(val);
-        } else if (key == "block_size_y") {
-            cfg.block_size_y = std::stoi(val);
-        } else if (key == "block_size_z") {
-            cfg.block_size_z = std::stoi(val);
-        } else {
+        const std::string key = trim(line.substr(0, eq_pos));
+        const std::string val = trim(line.substr(eq_pos + 1));
+        if (!applyOption(cfg, key, val)) {
             std::cerr << "Warning: Unknown config key '" << key << "' at line " << line_number
                       << "\n";
         }
     }
 
+    finalizeConfig(cfg);
     return cfg;
 }
 
 Config ConfigParser::loadFromCommandLine(int argc, char** argv, const Config& base) {
     Config cfg = base;
     for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg.rfind("--config=", 0) == 0) {
-            cfg = loadFromFile(arg.substr(9));
-        } else if (arg == "--config" && i + 1 < argc) {
+        const std::string arg = argv[i];
+        if (arg == "--config" && i + 1 < argc) {
             cfg = loadFromFile(argv[++i]);
-        } else if (arg.rfind("--dim=", 0) == 0) {
-            cfg.dimension = std::stoi(arg.substr(6));
-        } else if (arg.rfind("--nx=", 0) == 0) {
-            cfg.nx = std::stoi(arg.substr(5));
-        } else if (arg.rfind("--ny=", 0) == 0) {
-            cfg.ny = std::stoi(arg.substr(5));
-        } else if (arg.rfind("--nz=", 0) == 0) {
-            cfg.nz = std::stoi(arg.substr(5));
-        } else if (arg.rfind("--steps=", 0) == 0) {
-            cfg.steps = std::stoi(arg.substr(8));
-        } else if (arg.rfind("--dt=", 0) == 0) {
-            cfg.dt = std::stod(arg.substr(5));
         } else if (arg == "--overlap") {
             cfg.overlap = true;
+        } else if (arg.rfind("--", 0) == 0) {
+            const auto eq = arg.find('=');
+            if (eq == std::string::npos) {
+                throw std::runtime_error("Unrecognised option: " + arg);
+            }
+            std::string key = arg.substr(2, eq - 2);
+            std::replace(key.begin(), key.end(), '-', '_');
+            const std::string val = arg.substr(eq + 1);
+            if (key == "config") {
+                cfg = loadFromFile(val);
+            } else if (key == "bx") {
+                cfg.block_size_x = std::stoi(val);
+            } else if (key == "by") {
+                cfg.block_size_y = std::stoi(val);
+            } else if (key == "bz") {
+                cfg.block_size_z = std::stoi(val);
+            } else if (!applyOption(cfg, key, val)) {
+                throw std::runtime_error("Unrecognised option: " + arg);
+            }
+        } else {
+            throw std::runtime_error("Unrecognised argument: " + arg);
         }
     }
+    finalizeConfig(cfg);
     return cfg;
 }
 

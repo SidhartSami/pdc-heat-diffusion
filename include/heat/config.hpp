@@ -23,6 +23,10 @@ struct Config {
     int block_size_y = 0;                   ///< 2D/3D cache block size along Y (0 = full column)
     int block_size_z = 0;                   ///< 3D cache block size along Z (0 = full depth)
     std::string output_path = "output/";    ///< Directory for simulation snapshots
+    bool dt_auto = false;                   ///< dt = auto: 0.9 x FTCS stability limit
+    int checkpoint_freq = 0;                ///< Checkpoint write frequency in steps (0 = disabled)
+    std::string checkpoint_path = "output/checkpoint"; ///< Checkpoint file prefix
+    std::string restart_from;               ///< Checkpoint prefix to restart from (empty = fresh)
 
     /**
      * @brief Validates explicit FTCS stability condition:
