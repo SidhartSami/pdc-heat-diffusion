@@ -44,6 +44,7 @@ add_library(heat_core
     src/solver.cpp
     src/decomposition.cpp
     src/halo.cpp
+    src/io.cpp
     src/mpi_solver.cpp
 )
 

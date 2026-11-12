@@ -1,6 +1,8 @@
 #include <heat/mpi_solver.hpp>
+#include <heat/io.hpp>
 
 #include <cmath>
+#include <memory>
 #include <iostream>
 #include <omp.h>
 #include <stdexcept>
@@ -425,7 +427,22 @@ Grid2D MpiSolver::run2D() const {
     }
 
     double t = 0.0;
-    for (int step = 0; step < m_config.steps; ++step) {
+    int start_step = 0;
+    if (!m_config.restart_from.empty()) {
+        Config restart_cfg = m_config;
+        restart_cfg.checkpoint_path = m_config.restart_from;
+        readCheckpoint2D(restart_cfg, decomp, u_old, start_step, t);
+    }
+
+    std::unique_ptr<VtkWriter> vtk;
+    if (m_config.snapshot_freq > 0) {
+        vtk = std::make_unique<VtkWriter>(m_config, m_comm);
+        if (start_step == 0) {
+            vtk->write2D(decomp, u_old, 0, t);
+        }
+    }
+
+    for (int step = start_step; step < m_config.steps; ++step) {
         if (m_config.overlap) {
             step2DOverlap(u_old, u_new, halo, decomp, bc, t);
         } else {
@@ -433,6 +450,15 @@ Grid2D MpiSolver::run2D() const {
         }
         t += m_config.dt;
         u_old.swap(u_new);
+
+        const int done = step + 1;
+        if (vtk && (done % m_config.snapshot_freq == 0 || done == m_config.steps)) {
+            vtk->write2D(decomp, u_old, done, t);
+        }
+        if (m_config.checkpoint_freq > 0 &&
+            (done % m_config.checkpoint_freq == 0 || done == m_config.steps)) {
+            writeCheckpoint2D(m_config, decomp, u_old, done, t);
+        }
     }
 
     halo.exchange(u_old);
@@ -482,7 +508,22 @@ Grid3D MpiSolver::run3D() const {
     }
 
     double t = 0.0;
-    for (int step = 0; step < m_config.steps; ++step) {
+    int start_step = 0;
+    if (!m_config.restart_from.empty()) {
+        Config restart_cfg = m_config;
+        restart_cfg.checkpoint_path = m_config.restart_from;
+        readCheckpoint3D(restart_cfg, decomp, u_old, start_step, t);
+    }
+
+    std::unique_ptr<VtkWriter> vtk;
+    if (m_config.snapshot_freq > 0) {
+        vtk = std::make_unique<VtkWriter>(m_config, m_comm);
+        if (start_step == 0) {
+            vtk->write3D(decomp, u_old, 0, t);
+        }
+    }
+
+    for (int step = start_step; step < m_config.steps; ++step) {
         if (m_config.overlap) {
             step3DOverlap(u_old, u_new, halo, decomp, bc, t);
         } else {
@@ -490,6 +531,15 @@ Grid3D MpiSolver::run3D() const {
         }
         t += m_config.dt;
         u_old.swap(u_new);
+
+        const int done = step + 1;
+        if (vtk && (done % m_config.snapshot_freq == 0 || done == m_config.steps)) {
+            vtk->write3D(decomp, u_old, done, t);
+        }
+        if (m_config.checkpoint_freq > 0 &&
+            (done % m_config.checkpoint_freq == 0 || done == m_config.steps)) {
+            writeCheckpoint3D(m_config, decomp, u_old, done, t);
+        }
     }
 
     halo.exchange(u_old);

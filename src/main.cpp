@@ -118,8 +118,19 @@ int main(int argc, char** argv) {
         std::cout << "\n Time step (dt): " << config.dt
                   << ", Max stable dt: " << config.maxStableDt() << " (STABLE)\n"
                   << " Steps: " << config.steps << ", Overlap: " << (config.overlap ? "ON" : "OFF")
-                  << "\n"
-                  << "========================================================\n";
+                  << "\n";
+        if (config.snapshot_freq > 0) {
+            std::cout << " VTK snapshots every " << config.snapshot_freq << " steps -> "
+                      << config.output_path << "/heat.pvd\n";
+        }
+        if (config.checkpoint_freq > 0) {
+            std::cout << " Checkpoints every " << config.checkpoint_freq << " steps -> "
+                      << config.checkpoint_path << "_r*.bin\n";
+        }
+        if (!config.restart_from.empty()) {
+            std::cout << " RESTARTING from checkpoint " << config.restart_from << "\n";
+        }
+        std::cout << "========================================================\n";
     }
 
     // Warm-up iteration/barrier
@@ -128,13 +139,18 @@ int main(int argc, char** argv) {
     heat::Timer timer;
     timer.start();
 
-    heat::MpiSolver solver(config, MPI_COMM_WORLD);
-    if (config.dimension == 2) {
-        auto grid2d = solver.run2D();
-        (void)grid2d;
-    } else {
-        auto grid3d = solver.run3D();
-        (void)grid3d;
+    try {
+        heat::MpiSolver solver(config, MPI_COMM_WORLD);
+        if (config.dimension == 2) {
+            auto grid2d = solver.run2D();
+            (void)grid2d;
+        } else {
+            auto grid3d = solver.run3D();
+            (void)grid3d;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[RANK " << rank << "] Fatal: " << e.what() << "\n";
+        MPI_Abort(MPI_COMM_WORLD, 3);
     }
 
     timer.stop();
@@ -172,12 +188,14 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         // If --benchmark-csv was requested via environment or flag, write CSV
         const char* csv_output = std::getenv("BENCHMARK_CSV_FILE");
+        const char* tag_env = std::getenv("BENCHMARK_TAG");
         if (csv_output != nullptr) {
             const bool file_exists = std::ifstream(csv_output).good();
             std::ofstream out(csv_output, std::ios::app);
             if (!file_exists) {
                 out << "timestamp,cpu_model,ranks,threads_per_rank,dimension,nx,ny,nz,steps,overlap,"
-                    << "min_time_s,max_time_s,avg_time_s,megaupdates_per_s,omp_places,omp_proc_bind\n";
+                    << "min_time_s,max_time_s,avg_time_s,megaupdates_per_s,omp_places,omp_proc_bind,"
+                    << "block_y,block_z,tag\n";
             }
             out << std::chrono::duration_cast<std::chrono::seconds>(
                        std::chrono::system_clock::now().time_since_epoch())
@@ -187,7 +205,8 @@ int main(int argc, char** argv) {
                 << (config.dimension == 3 ? config.nz : 1) << "," << config.steps << ","
                 << (config.overlap ? 1 : 0) << "," << min_elapsed << "," << max_elapsed << ","
                 << avg_elapsed << "," << mflops_or_mups << ",\"" << omp_places_str << "\",\""
-                << omp_bind_str << "\"\n";
+                << omp_bind_str << "\"," << config.block_size_y << "," << config.block_size_z
+                << "," << ((tag_env != nullptr) ? tag_env : "") << "\n";
         }
     }
 
