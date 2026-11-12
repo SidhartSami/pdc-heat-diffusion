@@ -1,0 +1,21 @@
+timestamp,cpu_model,ranks,threads_per_rank,dimension,nx,ny,nz,steps,overlap,min_time_s,max_time_s,avg_time_s,megaupdates_per_s,omp_places,omp_proc_bind,block_y,block_z,tag
+1794500486,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,1,1.22945,1.23026,1.22972,1363.71,"cores","close",0,0,E2D;overlap_true;1;ovfirst
+1794500487,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,0,1.19163,1.19182,1.19172,1407.69,"cores","close",0,0,E2D;overlap_false;1;ovfirst
+1794500489,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,0,1.24215,1.2424,1.24226,1350.39,"cores","close",0,0,E2D;overlap_false;2;novfirst
+1794500490,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,1,1.20102,1.2017,1.20129,1396.13,"cores","close",0,0,E2D;overlap_true;2;novfirst
+1794500492,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,1,1.20969,1.21453,1.2125,1381.37,"cores","close",0,0,E2D;overlap_true;3;ovfirst
+1794500494,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,0,1.29953,1.30098,1.30041,1289.58,"cores","close",0,0,E2D;overlap_false;3;ovfirst
+1794500495,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,0,1.12893,1.13004,1.12971,1484.66,"cores","close",0,0,E2D;overlap_false;4;novfirst
+1794500497,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,1,1.11371,1.11396,1.11382,1506.09,"cores","close",0,0,E2D;overlap_true;4;novfirst
+1794500498,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,1,1.1454,1.14619,1.14567,1463.74,"cores","close",0,0,E2D;overlap_true;5;ovfirst
+1794500500,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,0,1.10338,1.10372,1.10354,1520.06,"cores","close",0,0,E2D;overlap_false;5;ovfirst
+1794500501,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,0,1.12251,1.12333,1.12301,1493.52,"cores","close",0,0,E2D;overlap_false;6;novfirst
+1794500503,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,1,1.11577,1.11591,1.11584,1503.46,"cores","close",0,0,E2D;overlap_true;6;novfirst
+1794500504,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,1,1.09201,1.09227,1.09217,1535.99,"cores","close",0,0,E2D;overlap_true;7;ovfirst
+1794500506,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,0,1.24563,1.24603,1.24577,1346.45,"cores","close",0,0,E2D;overlap_false;7;ovfirst
+1794500508,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,0,1.13786,1.13909,1.13866,1472.87,"cores","close",0,0,E2D;overlap_false;8;novfirst
+1794500509,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,1,1.09416,1.09452,1.09435,1532.84,"cores","close",0,0,E2D;overlap_true;8;novfirst
+1794500510,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,1,1.12237,1.12362,1.12324,1493.14,"cores","close",0,0,E2D;overlap_true;9;ovfirst
+1794500512,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,0,1.16757,1.16789,1.16775,1436.54,"cores","close",0,0,E2D;overlap_false;9;ovfirst
+1794500514,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,0,1.08898,1.08947,1.08917,1539.94,"cores","close",0,0,E2D;overlap_false;10;novfirst
+1794500515,"12th Gen Intel(R) Core(TM) i5-12500H",4,1,2,4096,4096,1,100,1,1.20396,1.20536,1.2044,1391.88,"cores","close",0,0,E2D;overlap_true;10;novfirst

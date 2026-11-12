@@ -1,0 +1,22 @@
+G5 start: 2026-11-12T21:06:49+05:00  reps=7 pairs=10 out=/mnt/c/University/PDC/Project/results/g5  load=1.29 1.29 0.61
+[A] mpi_P1_T1: 2D 4096x4096x1 steps=100 P=1 T=1
+[A] mpi_P2_T1: 2D 4096x4096x1 steps=100 P=2 T=1
+[A] mpi_P4_T1: 2D 4096x4096x1 steps=100 P=4 T=1
+[A] omp_P1_T2: 2D 4096x4096x1 steps=100 P=1 T=2
+[A] omp_P1_T4: 2D 4096x4096x1 steps=100 P=1 T=4
+[A] hybrid_P2_T2: 2D 4096x4096x1 steps=100 P=2 T=2
+[B] mpi_P1_T1: 3D 512x512x512 steps=50 P=1 T=1
+[B] mpi_P2_T1: 3D 512x512x512 steps=50 P=2 T=1
+[B] mpi_P4_T1: 3D 512x512x512 steps=50 P=4 T=1
+[B] omp_P1_T2: 3D 512x512x512 steps=50 P=1 T=2
+[B] omp_P1_T4: 3D 512x512x512 steps=50 P=1 T=4
+[B] hybrid_P2_T2: 3D 512x512x512 steps=50 P=2 T=2
+[C] weak_P1: 2D 2048x2048x1 steps=100 P=1 T=1
+[C] weak_P2: 2D 2048x4096x1 steps=100 P=2 T=1
+[C] weak_P4: 2D 4096x4096x1 steps=100 P=4 T=1
+[D] weak_P1: 3D 256x256x256 steps=30 P=1 T=1
+[D] weak_P2: 3D 256x256x512 steps=30 P=2 T=1
+[D] weak_P4: 3D 256x512x512 steps=30 P=4 T=1
+[E2D] overlap evaluation: 2D 4096, P=4, 10 interleaved pairs
+[E3D] overlap evaluation: 3D 512, P=4, 10 interleaved pairs
+G5 done: 2026-11-12T21:24:34+05:00
