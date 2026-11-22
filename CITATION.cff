@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you utilize this numerical solver or benchmark methodology, please cite it as below."
+title: "Parallel Heat Diffusion Simulation on Large 2D/3D Grids (MPI + OpenMP)"
+version: 1.0.0
+date-released: 2026-11-22
+url: "https://github.com/SidhartSami/pdc-heat-diffusion"
+repository-code: "https://github.com/SidhartSami/pdc-heat-diffusion"
+authors:
+  - family-names: "Sami"
+    given-names: "Sidhart"
+    orcid: ""
+  - family-names: "Rafy"
+    given-names: "Abdul"
+    affiliation: "FAST-NUCES"
+abstract: >-
+  A high-performance, distributed-memory (MPI) and shared-memory (OpenMP) numerical solver
+  for 2D and 3D transient heat diffusion using an explicit FTCS finite-difference scheme.
+  Features Cartesian topology decomposition, non-blocking compute-communication overlap,
+  NUMA-aware first-touch initialization, L2 cache spatial blocking, parallel VTK output,
+  and bit-exact checkpoint/restart mechanisms.
+keywords:
+  - "parallel computing"
+  - "distributed memory"
+  - "MPI"
+  - "OpenMP"
+  - "heat equation"
+  - "stencil computation"
+  - "domain decomposition"
+  - "FTCS"
+  - "cache blocking"
+license: "MIT"
