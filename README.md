@@ -86,6 +86,10 @@ mpirun -np 4 ./build/release/heat_solver --config=configs/small_2d.cfg
 - Sidhart Sami
 - Abdul Rafy ([@Abdul-Rafy2005](https://github.com/Abdul-Rafy2005))
 
+## AI assistance
+
+Parts of this project were developed with assistance from Claude Code (Anthropic). Commits that include its contribution carry a `Co-Authored-By` trailer. All results were produced by running the code in this repository.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
