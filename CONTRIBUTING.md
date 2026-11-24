@@ -2,12 +2,11 @@
 
 Welcome to the **Parallel Heat Diffusion Simulation** project repository. This document outlines the development workflow, branch strategy, formatting requirements, and review guidelines for all team members.
 
-## 1. Branch Strategy and Push Access Control
+## 1. Branch Strategy
 
-- `main`: Production-ready, passing all tests and CI checks. Never commit directly to `main`.
-- `gate/g<N>-<name>`: Milestone branches corresponding to project gates (e.g., `gate/g0-scaffold`, `gate/g1-serial-solver`, `gate/g2-mpi-decomposition`, `gate/g3-openmp-hybrid`).
-- `feature/<name>` or `fix/<name>`: Specific subtasks or bug fixes, merged into the current gate branch via PR.
-- **Push Permissions & Integrity**: Only the repository owner (`SidhartSami`) and authorized collaborator (`Abdul-Rafy2005`) hold write access to the repository. Commits pushed to `gate/*` branches and `main` represent evaluated and frozen milestone checkpoints; no unreviewed force-pushes or rebases are permitted once a gate is under review or approved.
+- `main` is the only long-lived branch and must always build and pass the tests.
+- Work on a short-lived branch (`feat/<name>`, `fix/<name>`, `docs/<name>`) and open a pull request into `main`.
+- Delete the branch after it is merged.
 
 ## 2. Commit Message Convention
 

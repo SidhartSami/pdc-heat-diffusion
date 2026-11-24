@@ -3,7 +3,7 @@
 **Course**: Parallel & Distributed Computing (PDC)
 **Reference**: Project #12 (Heat Diffusion / Stencil Computation)
 **Model**: Hybrid Distributed-Shared Memory (MPI + OpenMP)
-**Group Members**: [Group Member Placeholders]
+**Group Members**: Sidhart Sami, Abdul Rafy
 
 ---
 

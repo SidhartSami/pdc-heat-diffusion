@@ -1,6 +1,6 @@
 # Project Status
 
-All gates G0-G6 are implemented. Awaiting final review by the authors.
+All gates G0-G6 are implemented. Complete.
 
 | Gate | Scope | State | Evidence |
 |---|---|---|---|
